@@ -1,0 +1,111 @@
+# Information about the organisation hosting the GA4GH Beacon service:
+organisation:
+  id: org.example
+  name: GDI Example Organisation
+  welcomeUrl: https://gdi.example.org
+
+  # The following are all OPTIONAL:
+  description: >-
+    This is the default description of the Beacon.
+    Please update your Beacon info via configuration files.
+  address: Local street 1, 50709 City, COUNTRY
+  contactUrl: mailto:no-reply@example.org
+  logoUrl: https://gdi.onemilliongenomes.eu/images/gdi-logo-no-text.svg
+
+
+# This section defines the GA4GH Beacon entity-schemas and displayed texts.
+# Full paths are constructed as: "${schemaBaseUrl}${schemaVersionTag}${path}".
+# This info is used to construct schema references and details of entry-types.
+# Although this stuff is pretty much static and could be hard-coded into code,
+# hopefully the YAML-formatted representation is more friendly when something
+# needs to be changed.
+compliance:
+  specification: GA4GH Beacon v2
+  schemaBaseUrl: https://raw.githubusercontent.com/ga4gh-beacon/beacon-v2/
+  schemaVersionTag: v2.2.0
+  schemas:
+
+    - id: info
+      name: Beacon Info
+      description: Metadata describing a Beacon instance.
+      path: /framework/json/responses/sections/beaconInfoResults.json
+
+    - id: configuration
+      name: Beacon Configuration
+      description: >-
+        The Beacon configuration reports several attributes of the beacon
+        instance related to security, maturity and available entry types. Where
+        appropriate the details returned in `service-info` should mirror the
+        ones in this configuration.
+      path: /framework/json/configuration/beaconConfigurationSchema.json
+
+    - id: entryTypes
+      name: Entry Types
+      description: >-
+        This is a dictionary of the entry types implemented in this Beacon
+        instance.
+      path: /framework/json/configuration/entryTypesSchema.json
+
+    - id: map
+      name: Beacon Map
+      description: >-
+        Map of a Beacon, its entry types and endpoints. It is conceptually
+        similar to a website sitemap.
+      path: /framework/json/configuration/beaconMapSchema.json
+
+    - id: filteringTerm
+      name: Filtering Terms
+      description: >-
+        Schema for the Filtering Terms list related to the hosting entry type.
+        It is kept separated to allow updating it independently.
+      path: /framework/json/configuration/filteringTermsSchema.json
+
+    - id: genomicVariant
+      name: Genomic variation
+      description: Default schema for a genomic variant entry.
+      path: /models/json/beacon-v2-default-model/genomicVariations/defaultSchema.json
+
+    - id: dataset
+      name: Dataset
+      description: Default schema for a genomic dataset.
+      path: /models/json/beacon-v2-default-model/datasets/defaultSchema.json
+
+    - id: individual
+      name: Individual
+      description: Default schema for an individual entry.
+      path: /models/json/beacon-v2-default-model/individuals/defaultSchema.json
+
+
+# These items are displayed at /configuration, /entry_types, and /map:
+# Configure the properties to fine-tune how they appear in these endpoints.
+# "schemaId" is a reference to "compliance.schemas[].id" in this file.
+entryTypes:
+  - id: genomicVariant
+    name: Genomic Variants
+    description: The location of a sequence.
+    openapi: /models/src/beacon-v2-default-model/genomicVariations/endpoints.yaml
+    schemaId: genomicVariant
+    mainPath: /g_variants
+    ontologyTerm:
+      id: ENSGLOSSARY:0000092
+      label: variant
+
+  - id: dataset
+    name: Dataset
+    description: A Dataset is a collection of records, like rows in a database or cards in a cardholder.
+    openapi: /models/src/beacon-v2-default-model/datasets/endpoints.yaml
+    schemaId: dataset
+    mainPath: /datasets
+    ontologyTerm:
+      id: NCIT:C47824
+      label: Data set
+
+  - id: individual
+    name: Individual
+    description: A human being. It could be a Patient, a Tissue Donor, a Participant, a Human Study Subject, etc.
+    openapi: /models/src/beacon-v2-default-model/individuals/endpoints.yaml
+    schemaId: individual
+    mainPath: /individuals
+    ontologyTerm:
+      id: NCIT:C25190
+      label: Person

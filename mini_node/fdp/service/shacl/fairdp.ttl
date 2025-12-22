@@ -1,0 +1,177 @@
+# These shapes are based on FDP 1.2 and HealthDCAT-AP v5.
+# https://specs.fairdatapoint.org/fdp-specs-v1.2.html#repositorymetadata
+# https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/#DataService
+
+@prefix   dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dcatap: <http://data.europa.eu/r5r/> .
+@prefix    dct: <http://purl.org/dc/terms/> .
+@prefix  fdp-o: <https://w3id.org/fdp/fdp-o#> .
+@prefix   foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix    ldp: <http://www.w3.org/ns/ldp#> .
+@prefix     sh: <http://www.w3.org/ns/shacl#> .
+@prefix  vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix    xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:FAIRDataPointShape a sh:NodeShape ;
+  sh:targetClass fdp-o:FAIRDataPoint ;
+  sh:property [
+    sh:path dct:conformsTo ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:license ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:publisher ;
+    sh:node :AgentShape ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dct:title ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dct:accessRights ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:description ;
+    sh:nodeKind sh:Literal ;
+  ], [
+    sh:path dct:language ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:rights ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dcat:endPointURL ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:contactPoint ;
+    sh:node :ContactPointShape ;
+  ], [
+    sh:path dcat:endPointDescription ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dcat:keyword ;
+    sh:nodeKind sh:Literal ;
+  ], [
+    sh:path dcat:theme ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path fdp-o:conformsToFdpSpec ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path fdp-o:metadataIdentifier ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path fdp-o:metadataIssued ;
+    sh:datatype xsd:dateTime ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path fdp-o:metadataModified ;
+    sh:datatype xsd:dateTime ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:hasSoftwareVersion ;
+    sh:nodeKind sh:Literal ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path fdp-o:startDate ;
+    sh:datatype xsd:date ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path fdp-o:endDate ;
+    sh:datatype xsd:date ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path fdp-o:uiLanguage ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+:FAIRDataPointContainerShape a sh:NodeShape ;
+  sh:targetClass ldp:DirectContainer ;
+  sh:property [
+    sh:path dct:title ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:uniqueLang true ;
+  ], [
+    sh:path ldp:contains ;
+    #sh:node :CatalogShape ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+  ], [
+    sh:path ldp:hasMemberRelation ;
+    sh:hasValue fdp-o:metadataCatalog ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path ldp:membershipResource ;
+    sh:node :FAIRDataPointShape ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ] .
+
+# DataServiceShape clarifies additional constraints
+# inherited from HealthDCAT-AP v5.
+:DataServiceShape a sh:NodeShape ;
+  sh:targetClass dcat:DataService ;
+  sh:property [
+    sh:path dct:publisher ;
+    sh:node :AgentShape ;
+    sh:minCount 0 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcatap:applicableLegislation ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+# More info about "foaf": https://sparontologies.github.io/foaf/current/foaf.html
+:AgentShape a sh:NodeShape ;
+  sh:targetClass foaf:Organization ;
+  sh:property [
+    sh:path foaf:name ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path foaf:mbox ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^mailto:.+@.+\\..+$" ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path foaf:homepage ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://.+$" ;
+    sh:maxCount 1 ;
+  ] .
+
+# More info about "vcard": https://www.w3.org/TR/vcard-rdf/
+:ContactPointShape a sh:NodeShape ;
+  sh:targetClass vcard:Organization ;
+  sh:property [
+    sh:path vcard:fn ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path vcard:hasEmail ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^mailto:.+@.+\\..+$" ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path vcard:hasURL ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://.+$" ;
+    sh:maxCount 1 ;
+  ] .

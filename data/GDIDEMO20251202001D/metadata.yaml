@@ -1,0 +1,13 @@
+title: Minimal individual-based data from the 1000 Genomes project
+description: >-
+  This dataset covers only a part of chromosome 3 and is provided only for
+  technical testing.
+catalog_id: synthetic-data
+keywords: [ "demo", "test", "1000 Genomes" ]
+since: 2025-12-02T17:02:11Z
+updated: 2025-12-02T17:02:11Z
+record_count: 234567
+individual_count: 2504
+min_age: 29
+max_age: 81
+data_provider_name: Genomic Data Institute

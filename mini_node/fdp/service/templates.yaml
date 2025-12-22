@@ -1,0 +1,291 @@
+# The content of this file is consumed by gdi_node_api/services/fairdp/_generator.py.
+# If changes are needed, they must be applied here by a developer as this file
+# is not customisable by system administrators.
+
+# Main source of namespaces:
+# https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/#used-prefixes
+# "rdf" and "xsd" are prefixed implicitly by the generator-code.
+namespaces:
+  adms: http://www.w3.org/ns/adms#
+  csvw: http://www.w3.org/ns/csvw#
+  dcat: http://www.w3.org/ns/dcat#
+  dcatap: http://data.europa.eu/r5r/
+  dct: http://purl.org/dc/terms/
+  dctype: http://purl.org/dc/dcmitype/
+  dpv: https://w3id.org/dpv#
+  dqv: http://www.w3.org/ns/dqv#
+  fdp-o: https://w3id.org/fdp/fdp-o#
+  foaf: http://xmlns.com/foaf/0.1/
+  healthdcatap: http://healthdataportal.eu/ns/health#
+  lang: http://id.loc.gov/vocabulary/iso639-1/
+  ldp: http://www.w3.org/ns/ldp#
+  locn: http://www.w3.org/ns/locn#
+  odrl: http://www.w3.org/ns/odrl/2/
+  owl: http://www.w3.org/2002/07/owl#
+  prof: http://www.w3.org/ns/dx/prof/
+  prov: http://www.w3.org/ns/prov#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  skos: http://www.w3.org/2004/02/skos/core#
+  spdx: http://spdx.org/rdf/terms#
+  time: http://www.w3.org/2006/time#
+  vcard: http://www.w3.org/2006/vcard/ns#
+
+# The template properties are described in the "FAIR Data Point" document:
+# https://docs.google.com/spreadsheets/d/1kE58hbq0wlTwGOM_e2sYM8LW02epCqQEL0Ctc6WtJ8s/edit
+# SHACL files are largely based on the properties we use.
+templates:
+
+  # The "fairdp" model is defined by "4.2.1 FAIR Data Point metadata":
+  # https://specs.fairdatapoint.org/fdp-specs-v1.2.html#repositorymetadata
+  fairdp:
+    path: /fairdp
+    static:
+      a:
+        - fdp-o:FAIRDataPoint
+        - fdp-o:MetadataService
+        - dcat:DataService
+        - dcat:Resource
+
+      # [MANDATORY by FDP / HealthDCAT-AP]
+      dct:conformsTo: $FDP_URL/profile/service
+      dct:title: $FDP_CONFIG.title
+      dct:description: $FDP_CONFIG.description
+      dct:license: $FDP_CONFIG.license
+      dct:publisher:
+        a: [ foaf:Agent, foaf:Organization ]
+        foaf:name: $FDP_CONFIG.contact_point.name
+        foaf:homepage: $FDP_CONFIG.contact_point.homepage
+        foaf:mbox: $FDP_CONFIG.contact_point.email
+      dcat:endPointURL: $FDP_URL
+      dcat:contactPoint:
+        a: [ vcard:Kind, vcard:Organization ]
+        vcard:fn: $FDP_CONFIG.contact_point.name
+        vcard:hasURL: $FDP_CONFIG.contact_point.homepage
+        vcard:hasEmail: $FDP_CONFIG.contact_point.email
+      fdp-o:conformsToFdpSpec: https://specs.fairdatapoint.org/fdp-specs-v1.2.html
+      fdp-o:metadataIdentifier: $FDP_URL/catalog
+      fdp-o:metadataIssued: $FDP_CONFIG.since
+      fdp-o:metadataModified: $FDP_CONFIG.since
+
+      # [RECOMMENDED by HealthDCAT-AP]
+      dcat:endPointDescription:
+      dcat:keyword: $FDP_CONFIG.keywords
+      dcat:theme: $FDP_CONFIG.theme
+
+      # [OPTIONAL]
+      dct:language: $FDP_CONFIG.language
+      # dct:landingPage: foaf:Document [0..*]
+      # dct:format: dct:MediaTypeOrExtent [0..*]
+      # dct:accessRights: dct:RightsStatement [0..1]
+      # dct:rights: IRI
+      dcatap:applicableLegislation: $FDP_CONFIG.legislation
+      # fdp-o:startDate: 2025-12-24
+      # fdp-o:endDate: 2025-12-31
+      # fdp-o:uiLanguage: http://publications.europa.eu/resource/authority/language/ENG
+      # dct:hasSoftwareVersion: 1.0.0
+      # foaf:documentation: foaf:Document [0..*]
+      rdfs:label: $FDP_CONFIG.title
+    mapping:
+      title:
+        - dct:title
+        - rdfs:label
+      catalogs: fdp-o:metadataCatalog
+      updated: fdp-o:metadataModified
+
+  # The "catalogs" model is defined by
+  # "FAIR Data Point metadata's navigation information schema"
+  # under "4.2.1 FAIR Data Point metadata":
+  # https://specs.fairdatapoint.org/fdp-specs-v1.2.html#repositorymetadata
+  catalogs:
+    path: /fairdp/catalog
+    static:
+      a: ldp:DirectContainer
+      dct:title: Catalogs
+      ldp:hasMemberRelation: https://w3id.org/fdp/fdp-o#metadataCatalog
+      ldp:membershipResource: $FDP_URL
+    mapping:
+      # The parameter value is either a string or a list of strings (catalog URLs).
+      catalogs: ldp:contains
+
+  # Based on following specifications:
+  # https://specs.fairdatapoint.org/fdp-specs-v1.2.html#repositorymetadata
+  # https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/#Catalogue
+  catalog:
+    path: /fairdp/catalog
+    static:
+      a: dcat:Catalog
+
+      # [MANDATORY by FDP / HealthDCAT-AP]
+      dct:conformsTo: $FDP_URL/profile/catalog
+      # dct:description: <from-params>
+      dct:isPartOf: $FDP_URL
+      dct:license: $FDP_CONFIG.license
+      dct:publisher:
+        a: [ foaf:Agent, foaf:Organization ]
+        foaf:name: $FDP_CONFIG.contact_point.name
+        foaf:homepage: $FDP_CONFIG.contact_point.homepage
+        foaf:mbox: $FDP_CONFIG.contact_point.email
+      # dct:title: <from-params>
+      dcat:themeTaxonomy: $FDP_CONFIG.theme_taxonomy
+      dcatap:applicableLegislation: $FDP_CONFIG.legislation
+      fdp-o:metadataIdentifier: $FDP_URL/catalog/
+      fdp-o:metadataIssued: $FDP_CONFIG.since
+      fdp-o:metadataModified: $FDP_CONFIG.since
+
+      # RECOMMENDED:
+      dct:issued: $FDP_CONFIG.since
+      dct:language: $FDP_CONFIG.language
+      # dct:modified:
+      # foaf:homePage: <webpage-for-catalog-data>
+
+      # OPTIONAL:
+      # dct:accessRights: IRI
+      # dct:creator:
+      # dct:hasVersion:
+      # dct:rights: IRI
+      # dct:spatial:
+      # dct:temporal:
+      # dcat:service: $FDP_URL
+
+    mapping:
+      title: dct:title
+      description: dct:description
+      since:
+        - dct:issued
+        - fdp-o:metadataIssued
+      updated:
+        - dct:modified
+        - fdp-o:metadataModified
+      datasets: dcat:dataset
+
+  # Based on HealthDCAT-AP version 5:
+  # https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/#Dataset
+  dataset:
+    path: /fairdp/dataset
+    static:
+      a: dcat:Dataset
+
+      # [MANDATORY by HealthDCAT-AP]
+      dcat:distribution:
+        - a: dcat:Distribution
+          dcatap:applicableLegislation: $FDP_CONFIG.legislation
+          dcat:accessURL: $FDP_CONFIG.user_portal_datasets
+          dct:title: GDI User Portal
+          dct:description: Request dataset access for research using the GDI User Portal
+          dct:rights:
+            a: dct:RightsStatement
+            rdfs:label: >-
+              Access to data is conditional on the issuance of a permit by the
+              GDI national node after submission of a data request application.
+        - a: dcat:Distribution
+          dcatap:applicableLegislation: https://www.riigiteataja.ee/en/eli/508042019001/consolide
+          dcat:accessURL: https://genomics.ut.ee/en/content/estonian-biobank
+          dct:title: Estonian Biobank
+          dct:description: Request dataset access for research by contacting Estonian Biobank
+          dct:rights:
+            a: dct:RightsStatement
+            rdfs:label: >-
+              Access to data is conditional on the issuance of a permit by the
+              Scientific Advisory Committee of Estonian Biobank after
+              submission of a data request application.
+      dcat:theme: $FDP_CONFIG.theme
+      dcatap:applicableLegislation: $FDP_CONFIG.legislation
+
+      dct:accessRights: $FDP_CONFIG.access_right
+      dct:conformsTo: $FDP_URL/profile/dataset
+      # dct:description: <from-params>
+      # dct:identifier: <from-params>
+      # dct:title: <from-params>
+
+      healthdcatap:hdab:
+        a: foaf:Organization
+        foaf:name: $FDP_CONFIG.contact_point.data_access_body
+        dcat:contactPoint:
+          a: vcard:Organization
+          vcard:fn: $FDP_CONFIG.contact_point.name
+          vcard:hasURL: $FDP_CONFIG.contact_point.homepage
+          vcard:hasEmail: $FDP_CONFIG.contact_point.email
+      healthdcatap:healthCategory: http://13.81.34.152:1101/resource/authority/healthcategories/HGPD
+
+      # RECOMMENDED:
+      # adms:sample:
+      # dcat:contactPoint:
+      # dcat:keyword: <from-params>
+      # dct:publisher: <from-params>
+      # dpv:hasLegalBasis:
+      # dpv:hasPersonalData:
+      # dpv:hasPurpose:
+      # dpv:hasQualityAnnotation:
+      # healthdcatap:analytics:
+      # healthdcatap:hasCodeValues:
+      # healthdcatap:hasCodingSystem:
+      # healthdcatap:healthTheme:
+      # healthdcatap:maxTypicalAge: <from-params>
+      # healthdcatap:minTypicalAge: <from-params>
+      # healthdcatap:numberOfRecords: <from-params>
+      # healthdcatap:numberOfUniqueIndividuals: <from-params>
+      # healthdcatap:populationCoverage:
+      # healthdcatap:retentionPeriod:
+
+      # OPTIONAL:
+      # adms:identifier
+      # adms:versionNotes
+      # dcat:hasVersion
+      # dcat:inSeries
+      # dcat:landingPage
+      # dcat:qualifiedRelation
+      # dcat:spatialResolutionInMeters
+      # dcat:temporalResolution
+      # dcat:version
+      # dct:accrualPeriodicity
+      # dct:alternative
+      # dct:creator
+      # dct:isReferencedBy
+      # dct:issued
+      dct:language: $FDP_CONFIG.language
+      # dct:modified
+      # dct:provenance
+      # dct:relation
+      # dct:source
+      # dct:spatial
+      # dct:temporal
+      # dct:type
+      # foaf:page
+      # prov:qualifiedAttribution
+      # prov:wasGeneratedBy
+
+    mapping:
+      id: dct:identifier
+      title: dct:title
+      description: dct:description
+      keywords: dcat:keyword
+      since: dct:issued
+      updated: dct:modified
+      min_age: healthdcatap:minTypicalAge
+      max_age: healthdcatap:maxTypicalAge
+      record_count: healthdcatap:numberOfRecords
+      individual_count: healthdcatap:numberOfUniqueIndividuals
+      data_provider_name:
+        dct:publisher:
+          a: foaf:Agent
+          foaf:name:
+          dcat:contactPoint:
+            a: vcard:Kind
+            vcard:fn:
+          healthdcatap:trustedDataHolder: true
+
+  # Customised based on the specification: https://www.w3.org/TR/dx-prof/
+  profile:
+    path: /fairdp/profile
+    static:
+      a: prof:Profile
+      rdfs:label: FAIR Data Point v1.2 / HealthDCAT-AP v5 Profile
+    mapping:
+      shacl_url:
+        prof:hasResource:
+          a: prof:ResourceDescriptor
+          rdfs:label: SHACL schema
+          dct:conformsTo: https://www.w3.org/TR/shacl/
+          dct:format: https://w3id.org/mediatype/text/turtle
+          prof:hasRole: http://www.w3.org/ns/dx/prof/role/Validation
+          prof:hasArtifact:

@@ -1,0 +1,50 @@
+# Based on "The Profiles Vocabulary": https://www.w3.org/TR/dx-prof/
+# but constraints are defined according to the local needs.
+
+@prefix  dct: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix   sh: <http://www.w3.org/ns/shacl#> .
+@prefix prof: <http://www.w3.org/ns/dx/prof/> .
+
+:ResourceDescriptor_Shape a sh:NodeShape ;
+  sh:targetClass prof:ResourceDescriptor ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:conformsTo ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:format ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path prof:hasArtifact ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+  ], [
+    sh:path prof:hasRole ;
+    sh:nodeKind sh:IRI ;
+    sh:value <http://www.w3.org/ns/dx/prof/role/Validation> ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ] .
+
+:Profile_Shape a sh:NodeShape ;
+  sh:targetClass prof:Profile ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path prof:hasResource ;
+    sh:node :ResourceDescriptor_Shape ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ] .

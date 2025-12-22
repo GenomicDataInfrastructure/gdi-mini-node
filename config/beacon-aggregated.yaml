@@ -1,0 +1,40 @@
+# The base-path of endpoints for Aggregated Beacon API:
+base_path: /beacon/aggregated/v2
+
+info:
+  id: org.example.aggregated.beacon.v2
+  name: GDI Aggregated Beacon API
+  version: v0.9.0
+  environment: dev  # choices: dev, test, staging, prod
+
+  # The following are all OPTIONAL:
+  description: One of the many genomic databases of the GDI user portal.
+  alternativeUrl: https://portal.dev.gdi.lu/allele-frequency
+  documentationUrl: https://docs.genomebeacons.org
+  # createdAt: "2025-10-01T11:00:00Z"
+  # updatedAt: "2026-10-31T23:00:00Z"
+  # info:  # (optional dictionary of custom properties and values)
+
+configuration:
+  productionStatus: DEV  # DEV, TEST, PROD (just info)
+  securityLevel: PUBLIC  # PUBLIC, REGISTERED, CONTROLLED (just info)
+  granularity: record    # boolean, count, record (affects responses)
+  #file_secret:           # if files are encrypted, this is the password
+
+  # It's possible to restrict access using JWT validation or Basic
+  # authentication but not both.
+  # Authentication method becomes active if all the fields are filled in.
+  oidc:
+    issuer: https://login.aai.lifescience-ri.eu/oidc/
+    client_id:
+    client_secret:
+    required_visas:
+      # Visa properties for "bona fide researcher":
+      - type: ResearcherStatus
+        value: https://doi.org/10.1038/s41431-018-0219-y
+
+  # Both username and password are required to make the row effective.
+  # Without any effective rows, Basic authentication is not effective.
+  basic:
+    - username:
+      password:

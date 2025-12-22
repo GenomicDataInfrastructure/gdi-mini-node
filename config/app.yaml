@@ -1,0 +1,28 @@
+# Log levels: DEBUG, INFO, WARN, ERROR
+# Log formats: plain, json
+logger:
+  root_level: WARN
+  app_level: DEBUG
+  format: plain
+
+# [REQUIRED] The base-directory the app will use for loading dataset info and
+# Beacon data. Also, the destination for files downloaded from an S3 storage.
+data_dir: ./data
+
+# [OPTIONAL] Basic Authentication credentials for the info page at the root path
+# Without these values, no authentication is required from users.
+basic_auth:
+  username:
+  password:
+
+# [OPTIONAL] Automatic file-loading from an S3 storage to the data folder.
+# To activate the service, the URL and both keys must be specified.
+sync_from_s3:
+  # The bucket name is specified after the hostname.
+  # Directory path to monitor can be specified after the bucket name.
+  # The directory path will be omitted from the downloaded file.
+  url: https://s3.example.org/bucket/datasets/
+  access_key:
+  secret_key:
+  # The path-suffix used for pre-filtering S3 files:
+  path_suffix: .parquet

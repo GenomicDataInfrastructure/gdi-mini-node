@@ -1,0 +1,10 @@
+services:
+  mini-node:
+    container_name: mini-node
+    image: mininode:latest
+    build: .
+    ports:
+      - "127.0.0.1:8080:8000"
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data:ro

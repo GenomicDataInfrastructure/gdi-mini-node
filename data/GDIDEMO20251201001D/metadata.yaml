@@ -1,0 +1,13 @@
+title: Minimal aggregated data from the 1000 Genomes project
+description: >-
+  This dataset covers only a part of chromosome 3 and is provided only for
+  technical testing.
+catalog_id: genome-of-europe
+keywords: [ "demo", "test", "1000 Genomes" ]
+since: 2025-12-01T13:31:27Z
+updated: 2025-12-01T13:33:27Z
+record_count: 272689
+individual_count: 2504
+min_age: 35
+max_age: 35
+data_provider_name: Genomic Data Institute

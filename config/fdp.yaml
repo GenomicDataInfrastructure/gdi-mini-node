@@ -1,0 +1,42 @@
+# Configures the exposed properties of the FAIR Data Point.
+# These values are referenced in templates.yaml using "$FDP_CONFIG".
+
+title: GDI-DEMO FAIR Data Point
+description: Genomic datasets demo for the GDI development.
+theme_taxonomy: http://publications.europa.eu/resource/authority/data-theme
+theme: http://publications.europa.eu/resource/authority/data-theme/HEAL
+language: http://publications.europa.eu/resource/authority/language/ENG
+legislation: http://data.europa.eu/eli/reg/2025/327/oj
+license: http://purl.org/NET/rdflicense/cc-by-nc-nd4.0
+access_right: http://publications.europa.eu/resource/authority/access-right/RESTRICTED
+user_portal_datasets: https://portal.dev.gdi.lu/datasets
+since: 2025-12-01T12:00:00Z
+keywords: [ GDI, FAIRDataPoint, demo ]
+
+contact_point:
+  data_access_body: Genomic Data Access Body
+  name: GDI National Coordination Point
+  homepage: https://node.example.org/
+  email: gdi@example.org
+
+# These are the FDP catalogues displayed via FDP API.
+# The key serves as a catalogue ID that datasets must reference.
+# Datasets, that reference non-existing keys, are not exposed.
+# Filling in the "since" field is optional.
+catalogs:
+  synthetic-data:
+    title: Synthetic Data
+    description: Non-sensitive derived datasets
+    # since: 2025-12-01T12:00:00Z
+  genome-of-europe:
+    title: Genome of Europe
+    description: Population-specific genomic datasets.
+    # since: 2025-12-01T12:00:00Z
+  cancer-data:
+    title: Cancer Data
+    description: Genomic datasets that are related to cancer-diseases.
+    # since: 2025-12-01T12:00:00Z
+  rare-disease-data:
+    title: Rare Disease Data
+    description: Genomic datasets that are related to rare-diseases.
+    # since: 2025-12-01T12:00:00Z

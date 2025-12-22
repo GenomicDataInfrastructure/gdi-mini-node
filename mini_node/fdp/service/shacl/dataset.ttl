@@ -1,0 +1,467 @@
+# These shapes are based on HealthDCAT-AP v5:
+# https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/#Dataset
+# dct:conformsTo is required by FAIR Data Point v1.2.
+
+@prefix         dcat: <http://www.w3.org/ns/dcat#> .
+@prefix       dcatap: <http://data.europa.eu/r5r/> .
+@prefix          dct: <http://purl.org/dc/terms/> .
+@prefix         foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix healthdcatap: <http://healthdataportal.eu/ns/health#> .
+@prefix         prov: <http://www.w3.org/ns/prov#> .
+@prefix         rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix           sh: <http://www.w3.org/ns/shacl#> .
+@prefix         skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix         spdx: <http://spdx.org/rdf/terms#> .
+@prefix        vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix          xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# DatasetShape is based on HealthDCAT-AP v5.
+# dct:conformsTo is required by FAIR Data Point v1.2.
+
+:DatasetShape a sh:NodeShape ;
+  sh:targetClass dcat:Dataset ;
+  sh:property [
+    sh:path dcat:contactPoint ;
+    sh:description "Contact information that can be used for sending comments about the Dataset." ;
+    sh:node :ContactPointShape ;
+  ], [
+    sh:path dcat:distribution ;
+    sh:description "An available Distribution for the Dataset." ;
+    sh:node :Distribution_Shape ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dcat:theme ;
+    sh:description "A category of the Dataset." ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:hasValue <http://publications.europa.eu/resource/authority/data-theme/HEAL> ;
+  ], [
+    sh:path dcat:hasVersion ;
+    sh:description "A related Dataset that is a version, edition, or adaptation of the described Dataset." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dcat:inSeries ;
+    sh:description "A dataset series of which the dataset is part." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dcat:keyword ;
+    sh:description "A keyword or tag describing the Dataset." ;
+    sh:nodeKind sh:Literal ;
+  ], [
+    sh:path dcat:landingPage ;
+    sh:description "A web page that provides access to the Dataset, its Distributions and/or additional information." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dcat:qualifiedRelation ;
+    sh:description "Link to a description of a relationship with another resource." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dcat:spatialResolutionInMeters ;
+    sh:description "The minimum spatial separation resolvable in a dataset, measured in meters." ;
+    sh:datatype xsd:decimal ;
+    sh:minInclusive 0 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:temporalResolution ;
+    sh:description "An interval of time that is named or defined by its start and end dates)." ;
+    sh:datatype xsd:duration ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:version ;
+    sh:description "The version indicator (name or identifier) of a resource." ;
+    sh:nodeKind sh:Literal ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcatap:applicableLegislation ;
+    sh:description "The legislation that mandates the creation or management of the Dataset." ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dct:accessRights ;
+    sh:description "Information that indicates whether the Dataset is publicly accessible, has access restrictions or is not public." ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:conformsTo ;
+    sh:description "An established standard to which the described resource conforms." ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:description ;
+    sh:description "A free-text information about the Dataset." ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dct:identifier ;
+    sh:description "The main identifier for the Dataset, e.g. the URI or other unique identifier in the context of the Catalogue." ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dct:title ;
+    sh:description "A name given to the Dataset." ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dct:accrualPeriodicity ;
+    sh:description "The frequency at which the Dataset is updated." ;
+    sh:class dct:Frequency ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:alternative ;
+    sh:description "An alternative name for the Dataset." ;
+    sh:nodeKind sh:Literal ;
+  ], [
+    sh:path dct:creator ;
+    sh:description "An entity responsible for producing the dataset." ;
+    sh:node :AgentShape ;
+  ], [
+    sh:path dct:isReferencedBy ;
+    sh:description "A related resource, such as a publication, that references, cites, or otherwise points to the dataset." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:issued ;
+    sh:description "The date of formal issuance (e.g.: publication) of the Dataset." ;
+    sh:datatype xsd:dateTime ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:language ;
+    sh:description "A language of the Dataset." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:modified ;
+    sh:description "The most recent date on which the Dataset was changed or modified." ;
+    sh:datatype xsd:dateTime ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:provenance ;
+    sh:description "Information about how the data was collected, including methodologies, tools, and protocols used" ;
+    sh:class dct:ProvenanceStatement ;
+  ], [
+    sh:path dct:publisher ;
+    sh:description "An entity (organisation) responsible for making the Dataset available." ;
+    sh:node :HealthPublisherAgent_Shape ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:relation ;
+    sh:description "A related resource." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:source ;
+    sh:description "A related Dataset from which the described Dataset is derived." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:spatial ;
+    sh:description "A geographic region that is covered by the Dataset." ;
+    sh:class dct:Location ;
+  ], [
+    sh:path dct:temporal ;
+    sh:description "A temporal period that the Dataset covers." ;
+    sh:node :PeriodOfTime_Shape ;
+  ], [
+    sh:path dct:type ;
+    sh:description "A type of the Dataset." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path foaf:page ;
+    sh:description "A page or document about this Dataset. Refers to documentation." ;
+    sh:class foaf:Document ;
+  ], [
+    sh:path healthdcatap:analytics ;
+    sh:description "An analytics distribution of the dataset." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path healthdcatap:hasCodeValues ;
+    sh:description "Health classifications, or other classification-like systems and their codes that can be associated with the dataset." ;
+    # Once the controlled vocabulary becomes available, it will be expressed as an IRI.
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:node :HasCodeValues_Shape ;
+  ], [
+    sh:path healthdcatap:hasCodingSystem ;
+    sh:description "Coding systems in use (ex: ICD-10-CM, DGRs, SNOMED=CT)." ;
+    # Once the controlled vocabulary becomes available, it will be expressed as an IRI.
+    sh:nodeKind sh:BlankNodeOrIRI ;
+  ], [
+    sh:path healthdcatap:hdab ;
+    sh:description "" ;
+    sh:node :HealthAgent_Shape ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path healthdcatap:healthCategory ;
+    sh:description "" ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+  ], [
+    sh:path healthdcatap:healthTheme ;
+    sh:description "A category of the Dataset or tag describing the Dataset." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path healthdcatap:maxTypicalAge ;
+    sh:description "Maximum typical age of the population within the dataset." ;
+    sh:datatype xsd:nonNegativeInteger ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path healthdcatap:minTypicalAge ;
+    sh:description "Minimum typical age of the population within the dataset." ;
+    sh:datatype xsd:nonNegativeInteger ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path healthdcatap:numberOfRecords ;
+    sh:description "Size of the dataset in terms of the number of records." ;
+    sh:datatype xsd:nonNegativeInteger ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path healthdcatap:numberOfUniqueIndividuals ;
+    sh:description "Number of records for unique individuals." ;
+    sh:datatype xsd:nonNegativeInteger ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path healthdcatap:populationCoverage ;
+    sh:description "A definition of the population within the dataset." ;
+    sh:nodeKind sh:Literal ;
+  ], [
+    sh:path healthdcatap:retentionPeriod ;
+    sh:description "A temporal period which the dataset is available for secondary use." ;
+    sh:node :PeriodOfTime_Shape ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path prov:qualifiedAttribution ;
+    sh:description "An Agent having some form of responsibility for the resource." ;
+    sh:class prov:Attribution ;
+  ], [
+    sh:path prov:wasGeneratedBy ;
+    sh:description "An activity that generated, or provides the business context for, the creation of the dataset." ;
+    sh:class prov:Activity ;
+  ] .
+
+# This is customised. More info about foaf namespace:
+# https://sparontologies.github.io/foaf/current/foaf.html
+:AgentShape a sh:NodeShape ;
+  sh:targetClass foaf:Organization ;
+  sh:property [
+    sh:path foaf:name ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path foaf:mbox ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^mailto:.+@.+\\..+$" ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path foaf:homepage ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://.+$" ;
+    sh:maxCount 1 ;
+  ] .
+
+# More info about "vcard": https://www.w3.org/TR/vcard-rdf/
+:ContactPointShape a sh:NodeShape ;
+  sh:targetClass vcard:Organization ;
+  sh:property [
+    sh:path vcard:fn ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path vcard:hasEmail ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^mailto:.+@.+\\..+$" ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path vcard:hasURL ;
+    sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://.+$" ;
+    sh:maxCount 1 ;
+  ] .
+
+# Health Data Access Body Shape (Only for dcat:Dataset hdab)
+:HealthAgent_Shape a sh:NodeShape ;
+  sh:extends :Agent_Shape ;
+  sh:property [
+    sh:path dcat:contactPoint ;
+    sh:node :ContactPointShape ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:severity sh:Violation ;
+    sh:message "Each Health Agent must have exactly one dcat:contactPoint." ;
+  ] .
+
+# Health Publisher Agent Shape (Only for dcat:Dataset publisher)
+:HealthPublisherAgent_Shape a sh:NodeShape ;
+
+	# The HealthPublisherAgent_Shape was intended to extend HealthAgent_Shape by
+	# adding specific constraints (dct:description and healthdcatap:trustedDataHolder),
+	# but due to inconsistent support for multi-level inheritance across SHACL
+	# validators, we opted to inherit directly from Agent_Shape and duplicate the
+	# dcat:contactPoint constraint.
+	#sh:extends :HealthAgent_Shape ;
+
+  sh:extends :Agent_Shape ;
+  sh:property [
+    sh:path dcat:contactPoint ;
+    sh:node :ContactPointShape ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:severity sh:Violation ;
+    sh:description "Each foaf:Agent must have exactly one dcat:contactPoint." ;
+  ] ,	[
+    sh:path dct:description ;
+    sh:nodeKind sh:Literal ;
+    sh:maxCount 1 ;
+    sh:severity sh:Violation ;
+    sh:description "Each dct:publisher must have at most one dct:description (Publisher Note) as a literal." ;
+  ], [
+    sh:path healthdcatap:trustedDataHolder ;
+    sh:datatype xsd:boolean ;
+    sh:maxCount 1 ;
+    sh:severity sh:Violation ;
+    sh:description "Each dct:publisher must have at most one healthdcatap:trustedDataHolder with a boolean value." ;
+  ] .
+
+:HasCodeValues_Shape a sh:NodeShape ;
+  sh:targetClass skos:Concept ;
+  sh:property [
+    sh:path dct:identifier ;
+    sh:nodeKind sh:Literal ;
+    sh:datatype xsd:anyURI ;
+    sh:severity sh:Violation
+  ], [
+    sh:path skos:inScheme ;
+    sh:nodeKind sh:IRI ;
+    sh:severity sh:Violation
+  ] .
+
+:PeriodOfTime_Shape a sh:NodeShape ;
+  sh:targetClass dct:PeriodOfTime ;
+  sh:property [
+    sh:path dcat:startDate ;
+    sh:datatype xsd:date ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:endDate ;
+    sh:datatype xsd:date ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ] .
+
+:RightsStatement_Shape a sh:NodeShape ;
+  sh:targetClass dct:RightsStatement ;
+  sh:property [
+    sh:path rdfs:label ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+  ] .
+
+:Distribution_Shape a sh:NodeShape ;
+  sh:targetClass dcat:Distribution ;
+  sh:property [
+    sh:path dcat:accessService ;
+    sh:description "A data service that gives access to the distribution of the dataset." ;
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class dcat:DataService ;
+  ], [
+    sh:path dcat:accessURL ;
+    sh:description "A URL that gives access to a Distribution of the Dataset." ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dcat:byteSize ;
+    sh:description "The size of a Distribution in bytes." ;
+    sh:datatype xsd:nonNegativeInteger ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:checksum ;
+    sh:description "A mechanism that can be used to verify that the contents of a distribution have not changed." ;
+    sh:nodeKind sh:BlankNode ;
+    sh:class spdx:Checksum ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:compressFormat ;
+    sh:description "The format of the file in which the data is contained in a compressed form, e.g. to reduce the size of the downloadable file." ;
+    sh:nodeKind sh:IRI ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:downloadURL ;
+    sh:description "A URL that is a direct link to a downloadable file in a given format." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dcat:mediaType ;
+    sh:description "The media type of the Distribution as defined in the official register of media types managed by IANA." ;
+    sh:nodeKind sh:IRI ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:packageFormat ;
+    sh:description "The format of the file in which one or more data files are grouped together, e.g. to enable a set of related files to be downloaded together." ;
+    sh:nodeKind sh:IRI ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:spatialResolutionInMeters ;
+    sh:description "The minimum spatial separation resolvable in a dataset distribution, measured in meters." ;
+    sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcat:temporalResolution ;
+    sh:description "The minimum time period resolvable in the dataset distribution." ;
+    sh:datatype xsd:duration ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dcatap:applicableLegislation ;
+    sh:description "The legislation that mandates the creation or management of the Distribution." ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+  ], [
+    sh:path dcatap:availability ;
+    sh:description "An indication how long it is planned to keep the Distribution of the Dataset available." ;
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class skos:Concept ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:conformsTo ;
+    sh:description "An established schema to which the described Distribution conforms." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:description ;
+    sh:description "A free-text account of the Distribution." ;
+    sh:nodeKind sh:Literal ;
+  ], [
+    sh:path dct:format ;
+    sh:description "The file format of the Distribution." ;
+    sh:nodeKind sh:IRI ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:issued ;
+    sh:description "The date of formal issuance (e.g., publication) of the Distribution." ;
+    sh:datatype xsd:dateTime ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:language ;
+    sh:description "A language used in the Distribution." ;
+    sh:nodeKind sh:IRI ;
+  ], [
+    sh:path dct:license ;
+    sh:description "A licence under which the Distribution is made available." ;
+    sh:nodeKind sh:IRI ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:modified ;
+    sh:description "The most recent date on which the Distribution was changed or modified." ;
+    sh:datatype xsd:dateTime ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path dct:title ;
+    sh:description "A name given to the Distribution." ;
+    sh:nodeKind sh:Literal ;
+  ], [
+    sh:path dct:rights ;
+    sh:description "A statement that specifies rights associated with the Distribution." ;
+    sh:node :RightsStatement_Shape ;
+  ], [
+    sh:path foaf:page ;
+    sh:description "A page or document about this Distribution." ;
+    sh:nodeKind sh:BlankNodeOrIRI ;
+    sh:class foaf:Document ;
+  ] .

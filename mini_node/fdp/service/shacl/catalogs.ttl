@@ -1,0 +1,30 @@
+# Based on the specification:
+# https://specs.fairdatapoint.org/fdp-specs-v1.2.html#repositorymetadata
+
+@prefix   dct: <http://purl.org/dc/terms/> .
+@prefix fdp-o: <https://w3id.org/fdp/fdp-o#> .
+@prefix   ldp: <http://www.w3.org/ns/ldp#> .
+@prefix    sh: <http://www.w3.org/ns/shacl#> .
+
+:FAIRDataPointContainerShape a sh:NodeShape ;
+  sh:targetClass ldp:DirectContainer ;
+  sh:property [
+    sh:path dct:title ;
+    sh:nodeKind sh:Literal ;
+    sh:minCount 1 ;
+    sh:uniqueLang true ;
+  ], [
+    sh:path ldp:contains ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+  ], [
+    sh:path ldp:hasMemberRelation ;
+    sh:node fdp-o:metadataCatalog ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ], [
+    sh:path ldp:membershipResource ;
+    sh:nodeKind sh:IRI ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+  ].
