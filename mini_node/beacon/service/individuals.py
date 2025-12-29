@@ -10,7 +10,7 @@ from ..model.common import BeaconRequest, IncludeResponses
 from ..model.framework.result_sets import ResultSet, ResultSets
 from ..model.variant import VariantQueryParameters
 from ...data import DATA
-from ...data.data import BeaconAssembly
+from ...data.registry import BeaconAssembly
 
 """Implementation for exposing Beacon individuals count (only for sensitive Beacon).
 

@@ -15,6 +15,7 @@ RUN VENV_PATH=/opt/poetry; mkdir -p $VENV_PATH \
 ENV POETRY_VIRTUALENVS_CREATE=false
 
 # Deploy application with dependencies:
+RUN mkdir -p /app/data && chown -R nobody:nogroup /app/
 COPY --chown=nobody:nogroup pyproject.toml poetry.lock /app/
 RUN cd /app && poetry install --no-root --compile
 COPY --chown=nobody:nogroup mini_node /app/mini_node
