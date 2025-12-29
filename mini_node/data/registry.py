@@ -2,12 +2,12 @@ import os
 from dataclasses import dataclass, field
 from enum import StrEnum
 from logging import getLogger
-from os.path import abspath, basename, isdir, isfile, join
+from os.path import abspath, basename, dirname, isdir, isfile, join
 
 import yaml
 
-from ..setup import app_data_dir
 from mini_node.fdp.config import FdpCatalog, FdpDataset
+from mini_node.setup import app_data_dir
 
 _log = getLogger(__name__)
 
@@ -119,7 +119,8 @@ class BeaconData:
 # <some-path>/DATASET_ID/
 #   metadata.yaml – FDP properties about the datasets
 #   ASSEMBLY/     – either GRCh37 or GRCh38
-#     {allele_freq|variants}-chr{C}.{I}.parquet – Beacon data files
+#     {allele-freq|individuals}-chr{C}.{I}.parquet – Beacon data files
+#     individuals.parquet – Beacon data files about dataset individuals
 # Not matching files are ignored.
 class DataRegistry:
     def __init__(self, catalogs: dict[str, FdpCatalog]) -> None:
@@ -135,21 +136,79 @@ class DataRegistry:
         if file_path in self.problematic_files:
             del self.problematic_files[file_path]
 
+    def forget_issues_in_dir(self, dir_path: str) -> None:
+        paths = set(self.problematic_files.keys())
+        for file_path in paths:
+            if file_path.startswith(dir_path):
+                del self.problematic_files[file_path]
+
     def record_issues_with(self, file_path: str, e: Exception) -> None:
         self.problematic_files[file_path] = repr(e)
+        _log.warning("Problematic file [%s]: %s", file_path, e)
 
     def add_dataset(self, dataset_id: str, props: FdpDataset) -> None:
         self.fdp.datasets[dataset_id] = props
-        catalog_id = props.catalog_id
-        if catalog_id is not None:
-            if catalog_id not in self.fdp.catalog_datasets:
-                self.fdp.catalog_datasets[catalog_id] = []
-            self.fdp.catalog_datasets[catalog_id].append(dataset_id)
 
-    def remove_dataset(self, dataset_id: str) -> None:
-        del self.fdp.datasets[dataset_id]
+        catalog_id = props.catalog_id
+        if catalog_id is None:
+            _log.warning("[add_dataset] %s is missing catalog_id", dataset_id)
+            return
+
+        # Make sure it's not already included in another catalogue:
         for dataset_ids in self.fdp.catalog_datasets.values():
-            dataset_ids.remove(dataset_id)
+            if dataset_id in dataset_ids:
+                dataset_ids.remove(dataset_id)
+
+        # Register the dataset to the catalogue:
+        if catalog_id not in self.fdp.catalog_datasets:
+            self.fdp.catalog_datasets[catalog_id] = []
+        self.fdp.catalog_datasets[catalog_id].append(dataset_id)
+        _log.debug("[add_dataset] %s to catalog %s", dataset_id, catalog_id)
+
+        if catalog_id not in self.fdp.catalogs:
+            _log.warning("[add_dataset] %s references catalog_id [%s], which "
+                         "is not defined in FDP configuration, thus the "
+                         "dataset is not visible.", dataset_id, catalog_id)
+
+    def remove_dataset(self, dataset_id: str, also_beacon_data=False) -> None:
+        if dataset_id in self.fdp.datasets:
+            del self.fdp.datasets[dataset_id]
+
+        for catalog_id, dataset_ids in self.fdp.catalog_datasets.items():
+            if dataset_id in dataset_ids:
+                dataset_ids.remove(dataset_id)
+                _log.debug("[remove_dataset] %s from catalog %s",
+                           dataset_id, catalog_id)
+                return
+
+        _log.debug("[remove_dataset] %s from FDP", dataset_id)
+
+        # By default, the Beacon data is not modified as the metadata file might
+        # be added later (temporary delete and updated). In that case, the
+        # Beacon data does not have to scanned again.
+        if not also_beacon_data:
+            return
+
+        for beacon_data in [self.aggregated_beacon, self.sensitive_beacon]:
+            for assembly in beacon_data.assemblies:
+                datasets = beacon_data.assemblies[assembly]
+                for dataset in list(datasets):
+                    if dataset.dataset_id == dataset_id:
+                        datasets.remove(dataset)
+                        _log.debug("[remove_dataset] %s from assembly %s",
+                                   dataset_id, assembly)
+
+    def remove_beacon_dataset(self, dataset_id: str, assembly: BeaconAssembly):
+        for beacon_data in [self.aggregated_beacon, self.sensitive_beacon]:
+            if assembly not in beacon_data.assemblies:
+                continue
+
+            datasets = beacon_data.assemblies[assembly]
+            for dataset in list(datasets):
+                if dataset.dataset_id == dataset_id:
+                    datasets.remove(dataset)
+                    _log.debug("[remove_beacon_dataset] %s from assembly %s",
+                               dataset_id, assembly)
 
     def add_parquet(
             self,
@@ -158,7 +217,6 @@ class DataRegistry:
             file_path: str,
     ) -> None:
         filename = basename(file_path)
-        _log.debug("Adding parquet file %s", file_path)
         target_dataset = self._resolve_beacon_dataset(filename, assembly,
                                                       dataset_id)
         if target_dataset is None:
@@ -168,6 +226,7 @@ class DataRegistry:
 
         if filename == "individuals.parquet":
             target_dataset.individuals_parquet = file_path
+            _log.debug("[add_parquet] %s file %s", dataset_id, file_path)
             return
 
         chr_group = self._resolve_chr_group(filename)
@@ -175,26 +234,37 @@ class DataRegistry:
             _log.warning("[add_parquet] Ignoring Parquet file due bad "
                          "chr-group [%s]", file_path)
             return
+
         target_dataset.chr_group_files[chr_group] = file_path
+        _log.debug("[add_parquet] %s file %s to assembly %s",
+                   dataset_id, file_path, assembly)
 
     def remove_parquet(self, dataset_id: str, file_path: str) -> None:
         filename = basename(file_path)
-        target_dataset = self._resolve_beacon_dataset(filename, None,
-                                                      dataset_id)
+        assembly = BeaconAssembly(basename(dirname(file_path)))
+        target_dataset = self._resolve_beacon_dataset(
+            filename, assembly, dataset_id)
         if target_dataset is None:
             return
 
         if filename == "individuals.parquet":
+            _log.debug("[remove_parquet] %s file %s", dataset_id, file_path)
             target_dataset.individuals_parquet = None
-            return
+        else:
+            chr_group = self._resolve_chr_group(filename)
+            if chr_group is None:
+                _log.warning(
+                    "[remove_parquet] Ignoring Parquet file due bad chr-group [%s]",
+                    file_path)
+            else:
+                if chr_group in target_dataset.chr_group_files:
+                    del target_dataset.chr_group_files[chr_group]
+                _log.debug("[remove_parquet] %s file %s from assembly %s",
+                           dataset_id, file_path, assembly)
 
-        chr_group = self._resolve_chr_group(filename)
-        if chr_group is None:
-            _log.warning(
-                "[remove_parquet] Ignoring Parquet file due bad chr-group [%s]",
-                file_path)
-            return
-        del target_dataset.chr_group_files[chr_group]
+        if target_dataset.individuals_parquet is None and \
+                len(target_dataset.chr_group_files) == 0:
+            self.remove_beacon_dataset(dataset_id, assembly)
 
     def _resolve_beacon_dataset(
             self,
@@ -239,6 +309,14 @@ class DataRegistry:
         end = filename.rindex(".")
         return filename[start: end] if 0 < start < end else None
 
+    def log_status(self):
+        _log.info("Data scanning completed: %d datasets in total",
+                  len(self.fdp.datasets))
+        _log.info("Aggregated Beacon: %d datasets",
+                  len(self.aggregated_beacon.get_dataset_ids()))
+        _log.info("Sensitive Beacon: %d datasets",
+                  len(self.sensitive_beacon.get_dataset_ids()))
+
 
 def scan_data_directory(registry: DataRegistry) -> None:
     for dataset_id in os.listdir(app_data_dir):
@@ -260,18 +338,3 @@ def scan_data_directory(registry: DataRegistry) -> None:
                     if parquet_file.endswith(".parquet"):
                         abs_path = abspath(join(assembly_dir, parquet_file))
                         registry.add_parquet(dataset_id, assembly, abs_path)
-    _log.info("Completed scanning of the data directory")
-
-# DATASET_ID
-# . metadata.yaml
-# - GRCH38
-#   . allele_freq_chr...parquet
-
-
-# metadata.yaml
-#   - add -> dataset_id + props -> register (datasets, catalog_datasets)
-#   - remove -> dataset_id -> unregister (datasets, catalog_datasets)
-
-# parquet.yaml
-# . - add -> aff / sensitive -> register
-# . - remove -> aff / sensitive -> register

@@ -19,7 +19,7 @@ from ..model.allele_freq import (
 from ..model.common import BeaconRequest
 from ..model.variant import VariantQueryParameters
 from ...data import DATA
-from ...data.data import BeaconAssembly
+from ...data.registry import BeaconAssembly
 from ._parquet import parquet_filter_for_variants
 
 """Implementation for variant lookup (only for aggregated Beacon).
@@ -170,14 +170,14 @@ def _read_parquet(request: BeaconRequest, parquet_file: str) -> pa.Table | None:
 
     if table.num_rows == 0:
         _log.debug(
-            "No matching Parquet rows in [%s] for allele_freq query: %s",
+            "No matching Parquet rows in [%s] for allele-freq query: %s",
             parquet_file,
             query,
         )
         return None
 
     _log.info(
-        "Found %d matching row(s) in [%s] for allele_freq query: %s",
+        "Found %d matching row(s) in [%s] for allele-freq query: %s",
         table.num_rows,
         parquet_file,
         query,

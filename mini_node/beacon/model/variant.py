@@ -10,7 +10,7 @@ from pydantic import (
     field_validator,
 )
 
-from mini_node.data.data import BeaconAssembly
+from mini_node.data.registry import BeaconAssembly
 
 SequenceString = Annotated[
     str, StringConstraints(pattern=r"^[ACGTUNRYSWKMBDHV.-]*$")]
