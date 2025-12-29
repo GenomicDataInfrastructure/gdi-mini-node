@@ -83,57 +83,20 @@ class RegistryUpdater:
 
     def on_new_file(self, file_path: Path) -> None:
         if file_path.name == "metadata.yaml":
-            self._on_new_metadata(file_path)
+            self._on_new_metadata(file_path.resolve())
         elif file_path.suffix == ".parquet":
-            self._on_new_parquet(file_path)
+            self._on_new_parquet(file_path.resolve())
 
     def on_removed_file(self, file_path: Path) -> None:
         if file_path.name == "metadata.yaml":
-            self._on_removed_metadata(file_path)
+            self._on_removed_metadata(file_path.resolve())
         elif file_path.suffix == ".parquet":
-            self._on_removed_parquet(file_path)
-
-    def _on_new_metadata(self, file_path: Path):
-        dataset_id = self._resolve_dataset(file_path)
-        if dataset_id is None:
-            return
-
-        try:
-            with open(file_path, "r") as stream:
-                yaml_data = yaml.safe_load(stream)
-                dataset_meta = FdpDataset(**yaml_data)
-                self._registry.add_dataset(dataset_id, dataset_meta)
-        except Exception as e:
-            full_path = file_path.resolve().as_posix()
-            self._registry.record_issues_with(full_path, e)
-
-    def _on_removed_metadata(self, file_path: Path):
-        dataset_id = self._resolve_dataset(file_path)
-        if dataset_id is None:
-            return
-
-        full_path = file_path.resolve().as_posix()
-        self._registry.forget_issues_with(full_path)
-        self._registry.remove_dataset(dataset_id, also_beacon_data=True)
-
-    def _on_new_parquet(self, file_path: Path):
-        dataset_id, assembly = self._resolve_dataset_assembly(file_path)
-        if dataset_id is None:
-            return
-
-        full_path = file_path.resolve().as_posix()
-        self._registry.add_parquet(dataset_id, assembly, full_path)
-
-    def _on_removed_parquet(self, file_path: Path):
-        dataset_id, assembly = self._resolve_dataset_assembly(file_path)
-        if dataset_id is None:
-            return
-
-        full_path = file_path.resolve().as_posix()
-        self._registry.forget_issues_with(full_path)
-        self._registry.remove_parquet(dataset_id, full_path)
+            self._on_removed_parquet(file_path.resolve())
 
     def on_moved_dir(self, src_path: Path, dest_path: Path):
+        src_path = src_path.resolve()
+        dest_path = dest_path.resolve()
+
         # Check if a dataset-directory was renamed
         if src_path.parent == self._data_dir:
             self._registry.remove_dataset(src_path.name, also_beacon_data=True)
@@ -144,7 +107,7 @@ class RegistryUpdater:
             dataset_id = src_path.parent.name
             self._registry.remove_dataset(dataset_id, assembly)
 
-        self._registry.forget_issues_in_dir(src_path.resolve().as_posix())
+        self._registry.forget_issues_in_dir(src_path.as_posix())
 
         # Check if a new dataset-directory was created
         if dest_path.parent == self._data_dir:
@@ -162,6 +125,46 @@ class RegistryUpdater:
         elif dest_path.name in BeaconAssembly:
             dataset_id = dest_path.parent.name
             self._include_assembly_dir(dataset_id, dest_path)
+
+    def _on_new_metadata(self, file_path: Path):
+        dataset_id = self._resolve_dataset(file_path)
+        if dataset_id is None:
+            return
+
+        try:
+            with open(file_path, "r") as stream:
+                yaml_data = yaml.safe_load(stream)
+                dataset_meta = FdpDataset(**yaml_data)
+                self._registry.add_dataset(dataset_id, dataset_meta)
+        except Exception as e:
+            full_path = file_path.as_posix()
+            self._registry.record_issues_with(full_path, e)
+
+    def _on_removed_metadata(self, file_path: Path):
+        dataset_id = self._resolve_dataset(file_path)
+        if dataset_id is None:
+            return
+
+        full_path = file_path.as_posix()
+        self._registry.forget_issues_with(full_path)
+        self._registry.remove_dataset(dataset_id)
+
+    def _on_new_parquet(self, file_path: Path):
+        dataset_id, assembly = self._resolve_dataset_assembly(file_path)
+        if dataset_id is None:
+            return
+
+        full_path = file_path.as_posix()
+        self._registry.add_parquet(dataset_id, assembly, full_path)
+
+    def _on_removed_parquet(self, file_path: Path):
+        dataset_id, assembly = self._resolve_dataset_assembly(file_path)
+        if dataset_id is None:
+            return
+
+        full_path = file_path.as_posix()
+        self._registry.forget_issues_with(full_path)
+        self._registry.remove_parquet(dataset_id, full_path)
 
     def _resolve_dataset(self, file_path: Path):
         dataset_dir = file_path.parent
@@ -194,8 +197,8 @@ class RegistryUpdater:
     def _include_assembly_dir(self, dataset_id: str, assembly_dir: Path):
         assembly = BeaconAssembly(assembly_dir.name)
         for parquet_file in assembly_dir.glob("*.parquet"):
-            abs_path = parquet_file.resolve().as_posix()
-            self._registry.add_parquet(dataset_id, assembly, abs_path)
+            full_path = parquet_file.resolve().as_posix()
+            self._registry.add_parquet(dataset_id, assembly, full_path)
 
 
 __ALL__ = ["DataDirectoryObserver", "RegistryUpdater"]

@@ -171,17 +171,19 @@ class DataRegistry:
                          "dataset is not visible.", dataset_id, catalog_id)
 
     def remove_dataset(self, dataset_id: str, also_beacon_data=False) -> None:
-        if dataset_id in self.fdp.datasets:
-            del self.fdp.datasets[dataset_id]
-
+        found_in_catalog = False
         for catalog_id, dataset_ids in self.fdp.catalog_datasets.items():
             if dataset_id in dataset_ids:
                 dataset_ids.remove(dataset_id)
                 _log.debug("[remove_dataset] %s from catalog %s",
                            dataset_id, catalog_id)
-                return
+                found_in_catalog = True
 
-        _log.debug("[remove_dataset] %s from FDP", dataset_id)
+        if dataset_id in self.fdp.datasets:
+            del self.fdp.datasets[dataset_id]
+
+        if not found_in_catalog:
+            _log.debug("[remove_dataset] %s from FDP", dataset_id)
 
         # By default, the Beacon data is not modified as the metadata file might
         # be added later (temporary delete and updated). In that case, the
