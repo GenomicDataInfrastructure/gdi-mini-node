@@ -919,6 +919,18 @@ files = [
 arrow = ">=0.15.0"
 
 [[package]]
+name = "iterators"
+version = "0.2.0"
+description = "Iterator utility classes and functions"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "iterators-0.2.0-py3-none-any.whl", hash = "sha256:1d7ff03f576c9de0e01bac66209556c066d6b1fc45583a99cfc9f4645be7900e"},
+    {file = "iterators-0.2.0.tar.gz", hash = "sha256:e9927a1ea1ef081830fd1512f3916857c36bd4b37272819a6cd29d0f44431b97"},
+]
+
+[[package]]
 name = "jinja2"
 version = "3.1.6"
 description = "A very fast and expressive template engine."
@@ -2598,4 +2610,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14,<4"
-content-hash = "f35d6f7bc399fc16c2e4f0e55dba01e949c5ed656a98476631f72d620296483f"
+content-hash = "ca5e65edc411d857c8d8448c2a54f1d867d27040c3c3b85ec36ed813ac8632ce"
