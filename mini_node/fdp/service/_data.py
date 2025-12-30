@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Any
+
 from mini_node.data import DATA, fdp_config
+
 
 def get_last_modified() -> datetime | None:
     """Retrieves the latest dataset state update time for all catalogs."""

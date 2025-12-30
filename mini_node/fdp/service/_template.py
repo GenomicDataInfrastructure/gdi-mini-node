@@ -125,9 +125,9 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
+from logging import getLogger
 from os.path import dirname, join
 from typing import Any
-from logging import getLogger
 
 import yaml
 from email_validator import validate_email
@@ -145,6 +145,7 @@ ISO_DATETIME = re.compile(
 )
 
 _log = getLogger(__name__)
+
 
 class FdpTemplate(BaseModel):
     """An FDP template is defined by its URL path, static predicates part, and
@@ -398,8 +399,8 @@ class RDFGraphGenerator:
                     validated = validate_email(s)
                     return URIRef("mailto:" + validated.normalized)
                 except Exception as e:
-                    _log.warning("Failed to validate email address: %s", s, str(e))
-                    pass
+                    _log.warning(
+                        "Failed to validate email address: %s", s, str(e))
 
             # ISO date or datetime
             if ISO_DATETIME.match(s):

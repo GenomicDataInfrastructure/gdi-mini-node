@@ -1,122 +1,66 @@
-# These shapes are based on FDP 1.2 and HealthDCAT-AP v5.
-# https://specs.fairdatapoint.org/fdp-specs-v1.2.html#catalogmetadata
-# https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/#Catalogue
+# The following content comes from:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/Catalog.ttl
 
-@prefix  dcat: <http://www.w3.org/ns/dcat#> .
-@prefix   dct: <http://purl.org/dc/terms/> .
-@prefix fdp-o: <https://w3id.org/fdp/fdp-o#> .
-@prefix  foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix    sh: <http://www.w3.org/ns/shacl#> .
-@prefix   xsd: <http://www.w3.org/2001/XMLSchema#> .
+# SPDX-FileCopyrightText: 2025 Health-RI
+#
+# SPDX-License-Identifier: Apache-2.0
 
-# CatalogShape is based on FDP 1.2 and HealthDCAT-AP v5.
 
-:CatalogShape a sh:NodeShape ;
-  sh:targetClass dcat:Catalog ;
-  sh:property [
-    sh:path dct:conformsTo ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:description ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dct:isPartOf ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:license ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:publisher ;
-    sh:node :AgentShape ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:title ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dct:accessRights ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:hasVersion ;
-    sh:nodeKind sh:Literal ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:issued ;
-    sh:datatype xsd:dateTime ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:language ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:modified ;
-    sh:datatype xsd:dateTime ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:rights ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:themeTaxonomy ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:catalog ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:dataset ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:record ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:service ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path foaf:homepage ;
-    sh:nodeKind sh:IRI ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path fdp-o:metadataIdentifier ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path fdp-o:metadataIssued ;
-    sh:datatype xsd:dateTime ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path fdp-o:metadataModified ;
-    sh:datatype xsd:dateTime ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ] .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix example: <https://data.sparna.fr/shapes-example/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix gdi: <http://data.gdi.eu/core/p2/> .
+@prefix dcatap: <http://data.europa.eu/r5r/> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix dash: <http://datashapes.org/dash#> .
 
-# This is customised. More info about foaf namespace:
-# https://sparontologies.github.io/foaf/current/foaf.html
-:AgentShape a sh:NodeShape ;
-  sh:targetClass foaf:Organization ;
-  sh:property [
-    sh:path foaf:name ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path foaf:mbox ;
-    sh:nodeKind sh:IRI ;
-    sh:pattern "^mailto:.+@.+\\..+$" ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path foaf:homepage ;
-    sh:nodeKind sh:IRI ;
-    sh:pattern "^https?://.+$" ;
-    sh:maxCount 1 ;
-  ] .
+<https://data.sparna.fr/shapes-example#> a owl:Ontology;
+  rdfs:label "Catalog"@en;
+  rdfs:comment "Health-RI v2 Catalog."@en;
+  dct:description "SHACL definitions for GDI v1.1 metadata for Catalog."@en;
+  owl:versionInfo "0.1";
+  dct:modified "2025-12-29T13:37:52.800Z"^^xsd:dateTime .
+
+gdi:CatalogShape a sh:NodeShape;
+  rdfs:label "Catalog"@en;
+  sh:targetClass dcat:Catalog;
+  sh:property <http://data.gdi.eu/core/p2/CatalogShape#dcatap:applicableLegislation>,
+    <http://data.gdi.eu/core/p2/CatalogShape#dcat:dataset>,
+    <http://data.gdi.eu/core/p2/CatalogShape#dct:description>, <http://data.gdi.eu/core/p2/CatalogShape#dct:title> .
+
+<http://data.gdi.eu/core/p2/CatalogShape#dcatap:applicableLegislation> sh:path
+    dcatap:applicableLegislation;
+  sh:name "Applicable Legislation"@en;
+  sh:description "The legislation that mandates the creation or management of the Catalog."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:IRI;
+  sh:defaultValue <http://data.europa.eu/eli/reg/2025/327/oj>;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/CatalogShape#dcat:dataset> sh:path dcat:dataset;
+  sh:name "dataset"@en;
+  sh:description "Each catalog contains one or more datasets. This property serves to link datasets to a catalogue. Therefore, a dataset is always contained inside a catalogue."@en .
+
+<http://data.gdi.eu/core/p2/CatalogShape#dct:description> sh:path dct:description;
+  sh:name "description"@en;
+  sh:description "Briefly describe the catalog and what it contains. You can repeat this in multiple languages."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextAreaEditor .
+
+<http://data.gdi.eu/core/p2/CatalogShape#dct:title> sh:path dct:title;
+  sh:name "title"@en;
+  sh:description "Provide a unique title for your catalog, which can be repeated in multiple languages. Example: Healthy Brain Study."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
