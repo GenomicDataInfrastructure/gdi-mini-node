@@ -89,7 +89,7 @@ class ReceivedRequestSummary(BaseModel):
 
 
 class RequestMeta(BaseModel):
-    apiVersion: str
+    apiVersion: str = ""
     requestedSchemas: list[SchemaPerEntity] | None = None
 
 
@@ -103,7 +103,6 @@ class ResponseMeta(BaseModel):
 
 
 class BeaconRequest(BaseModel):
-    auth_header: str | None = None
     meta: RequestMeta
     query: BeaconQuery | None = None
 

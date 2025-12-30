@@ -54,7 +54,7 @@ class BeaconData:
     def get_dataset_individuals(
             self,
             assembly: BeaconAssembly | None = None,
-            chr: str | None = None,
+            chrom: str | None = None,
             pos: int | None = None,
     ) -> dict[str, tuple[str, str]]:
         datasets = {}
@@ -62,12 +62,11 @@ class BeaconData:
             return datasets
 
         chr_group = None
-        if assembly is not None and chr is not None and pos is not None:
+        if assembly is not None and chrom is not None and pos is not None:
             group = pos // POS_DIVIDER
-            chr_group = f"{chr}.{group}"
+            chr_group = f"{chrom}.{group}"
 
         for assembly in self.assemblies:
-            _log.debug("Iterating assembly %s", assembly)
             for dataset in self.assemblies[assembly]:
                 # "individuals.parquet" is always mandatory:
                 parquet1 = dataset.individuals_parquet
@@ -91,18 +90,19 @@ class BeaconData:
 
         _log.debug(
             "get_dataset_individuals('%s', (%s, %s) -> %s) -> %d datasets",
-            assembly, chr, pos, chr_group, len(datasets))
+            assembly, chrom, pos, chr_group, len(datasets))
 
         return datasets
 
-    def get_dataset_files(self, assembly: BeaconAssembly, chr, pos) -> dict[
-        str, str]:
+    def get_dataset_files(
+            self, assembly: BeaconAssembly, chrom: str, pos: int,
+    ) -> dict[str, str]:
         datasets = {}
         if assembly not in self.assemblies:
             return datasets
 
         group = pos // POS_DIVIDER
-        chr_group = f"{chr}.{group}"
+        chr_group = f"{chrom}.{group}"
 
         for dataset in self.assemblies[assembly]:
             file_path = dataset.chr_group_files.get(chr_group)
@@ -110,7 +110,7 @@ class BeaconData:
                 datasets[dataset.dataset_id] = file_path
 
         _log.debug("get_dataset_files('%s', (%s, %s) -> %s) -> %d datasets",
-                   assembly, chr, pos, chr_group, len(datasets))
+                   assembly, chrom, pos, chr_group, len(datasets))
 
         return datasets
 

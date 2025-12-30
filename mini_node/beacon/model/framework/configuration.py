@@ -3,7 +3,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from .entry_types import EntryType
-from mini_node.beacon.model.enums import Granularity
+from ..enums import Granularity
 
 
 class SecurityLevel(StrEnum):

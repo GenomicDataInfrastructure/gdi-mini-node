@@ -1,5 +1,4 @@
 from logging import getLogger
-from typing import Any
 from urllib.parse import urljoin
 
 from pydantic import HttpUrl
@@ -29,7 +28,7 @@ from .model.framework.entry_types import (
     OntologyTerm,
 )
 from .model.framework.filtering_term import FilteringTerms
-from .model.framework.result_sets import ResultSet, ResultSets, CollectionsList
+from .model.framework.result_sets import ResultSets, CollectionsList
 from .model.framework.service_info import (
     ServiceInfo,
     ServiceInfoType,
@@ -270,6 +269,7 @@ class BeaconSetup:
                 oidc_config.client_secret,
                 oidc_config.required_visas,
             )
+            self._oidc_verifier.init()
             _log.info(f"[{self._base_path}] OIDC authentication is enforced.")
 
         if basic_auth_config is not None and len(basic_auth_config) > 0:
@@ -319,8 +319,10 @@ class BeaconSetup:
             url += "/"
         return url
 
-    def censor_count(self, count: int) -> int:
-        return 0 if count < self._hide_lower_counts else count
+    def censor_count(self, count: int) -> int | None:
+        if count is None or count < self._hide_lower_counts:
+            return None
+        return count
 
     def beacon_info(self, base_url: str) -> BeaconInfo:
         return self._beacon_infos.resolve(self._url_with_path(base_url))
@@ -330,16 +332,17 @@ class BeaconSetup:
 
     def request_for_query(
             self,
-            auth_header: str,
             query: BeaconQuery | None = None,
+            schema: EntityType | None = None,
     ) -> BeaconRequest:
         """Creates the implicit RequestMeta for GET-requests."""
-        schema = self._response_schemas[EntityType.GENOMIC_VARIANT]
+        requested_schemas = []
+        if schema is not None:
+            requested_schemas = [self._response_schemas[schema]]
         return BeaconRequest(
-            auth_header=auth_header,
             meta=RequestMeta(
                 apiVersion=self._service_info.type.version,
-                requestedSchemas=[schema],
+                requestedSchemas=requested_schemas,
             ),
             query=query or BeaconQuery(),
         )
@@ -352,12 +355,15 @@ class BeaconSetup:
             returnedSchemas=[schema],
         )
 
-    def query_response_meta(self, request: BeaconRequest) -> ResponseMeta:
-        schema = self._response_schemas[EntityType.GENOMIC_VARIANT]
+    def query_response_meta(
+            self, request: BeaconRequest, entity_type: EntityType | None,
+    ) -> ResponseMeta:
+        schema = self._response_schemas.get(entity_type)
+        schemas = [schema] if schema is not None else []
         return ResponseMeta(
             beaconId=self._service_info.id,
             apiVersion=self._service_info.type.version,
-            returnedSchemas=[schema],
+            returnedSchemas=schemas,
             returnedGranularity=self._granularity(request),
             receivedRequestSummary=self._request_summary(request),
             testMode=request.query.testMode,
@@ -366,6 +372,7 @@ class BeaconSetup:
     def response(
             self, request: BeaconRequest,
             response: ResultSets | CollectionsList,
+            entity_type: EntityType,
     ) -> BeaconResponse:
         if isinstance(response, ResultSets):
             count = len(response.resultSets)
@@ -378,66 +385,32 @@ class BeaconSetup:
 
         summary = BeaconQueryResponse(
             exists=count > 0,
-            numTotalResults=count,
+            numTotalResults=self.count_value(request, count),
         )
 
         return BeaconResponse(
-            meta=self.query_response_meta(request),
+            meta=self.query_response_meta(request, entity_type),
             responseSummary=summary,
-            response=response,
-        )
-
-    def results_response(
-            self, request: BeaconRequest, results: dict[str, Any],
-    ) -> BeaconResponse:
-        total = len(results)
-        summary = BeaconQueryResponse(exists=total > 0, numTotalResults=total)
-        result_sets = None
-        if self._granularity(request) == Granularity.record:
-            result_sets = self._to_result_sets(results)
-
-        return BeaconResponse(
-            meta=self.query_response_meta(request),
-            responseSummary=summary,
-            response=result_sets,
+            response=self.records_value(request, response),
         )
 
     def collection_response(
-            self, request: BeaconRequest, results: list,
+            self, request: BeaconRequest, results: list, entity_type: EntityType
     ) -> BeaconResponse:
-        total = len(results)
-        summary = BeaconQueryResponse(exists=total > 0, numTotalResults=total)
+        count = len(results)
+        summary = BeaconQueryResponse(
+            exists=count > 0,
+            numTotalResults=self.count_value(request, count),
+        )
         collection = None
-        if self._granularity(request) == Granularity.record:
+        if self.is_show_records(request):
             collection = CollectionsList(collections=results)
 
         return BeaconResponse(
-            meta=self.query_response_meta(request),
+            meta=self.query_response_meta(request, entity_type),
             responseSummary=summary,
             response=collection,
         )
-
-    @staticmethod
-    def _to_result_sets(results: dict[str, Any]) -> ResultSets:
-        empty_list = []
-        result_sets = ResultSets()
-        items = result_sets.resultSets
-        for dataset_id, value in results.items():
-            if type(value) == int:
-                count = value
-                rows = empty_list
-            elif type(value) == list:
-                count = len(value)
-                rows = value
-            elif value is not None:
-                count = 1
-                rows = [value]
-            else:
-                count = 0
-                rows = empty_list
-            rs = ResultSet(id=dataset_id, resultsCount=count, results=rows)
-            items.append(rs)
-        return result_sets
 
     def _request_summary(
             self,
@@ -463,8 +436,13 @@ class BeaconSetup:
             granularity = Granularity.boolean
         return granularity
 
-    def show_count(self, request: BeaconRequest) -> bool:
-        return self._granularity(request) != Granularity.boolean
+    def count_value(self, request: BeaconRequest, count: int) -> int | None:
+        visible = self._granularity(request) != Granularity.boolean
+        return count if visible else None
+
+    def records_value(self, request: BeaconRequest, records):
+        visible = self._granularity(request) == Granularity.record
+        return records if visible else None
 
     def is_show_records(self, request: BeaconRequest) -> bool:
         return self._granularity(request) == Granularity.record
@@ -488,12 +466,25 @@ class BeaconSetup:
             if authorization_header.startswith("Bearer "):
                 token = authorization_header.split(" ")[1].strip()
                 valid = self._oidc_verifier.verify(token)
+            else:
+                _log.debug(
+                    f"[{self._base_path}] Authorization header is missing from "
+                    f"the request or it does not begin with 'Bearer '.")
 
             if not valid:
                 return "Bearer"
 
         if self._basic_headers is not None:
+            if not authorization_header.startswith("Basic "):
+                _log.debug(
+                    f"[{self._base_path}] Authorization header is missing from "
+                    f"the request or it does not begin with 'Basic '."
+                )
+
             valid = authorization_header in self._basic_headers
+            _log.debug(
+                f"[{self._base_path}] Basic authentication valid: {valid}"
+            )
             if not valid:
                 return "Basic"
 

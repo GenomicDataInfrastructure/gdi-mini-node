@@ -1,11 +1,11 @@
 from logging import getLogger
+
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.dataset as ds
 
-from ...data import DATA
-
 from ..model.variant import VariantQueryParameters
+from ...data import DATA
 
 _log = getLogger(__name__)
 

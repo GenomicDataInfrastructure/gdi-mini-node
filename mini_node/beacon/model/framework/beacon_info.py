@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing_extensions import Annotated
+from typing import Annotated
 
 from pydantic import AnyUrl, BaseModel, HttpUrl, UrlConstraints
 

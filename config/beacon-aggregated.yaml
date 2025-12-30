@@ -19,7 +19,6 @@ configuration:
   productionStatus: DEV  # DEV, TEST, PROD (just info)
   securityLevel: PUBLIC  # PUBLIC, REGISTERED, CONTROLLED (just info)
   granularity: record    # boolean, count, record (affects responses)
-  #file_secret:           # if files are encrypted, this is the password
 
   # It's possible to restrict access using JWT validation or Basic
   # authentication but not both.
