@@ -126,11 +126,11 @@ For retrieving allele-frequencies per dataset, use this input:
   },
   "query": {
     "requestParameters": {
-      "assemblyId": "GRCh38",
-      "referenceName": "22",
-      "start": "40016503",
+      "assemblyId": "GRCh37",
+      "referenceName": "3",
+      "start": "45864731",
       "referenceBases": "T",
-      "alternateBases": "A"
+      "alternateBases": "C"
     }
   }
 }
@@ -167,7 +167,7 @@ The response will look like (major noisy parts removed):
   },
   "response": {
     "resultSets": [{
-      "id": "GDIDEMO20251201001D",
+      "id": "GDI-DS-20251201001",
       "setType": "dataset",
       "exists": true,
       "resultsCount": 1,
@@ -217,7 +217,7 @@ The shortened response appears following:
   "response": {
     "collections": [
       {
-        "id": "GDIDEMO20251201001D",
+        "id": "GDI-DS-20251201001",
         "name": "Minimal aggregated data from the 1000 Genomes project",
         "description": "This dataset covers only a part of chromosome 3 and is provided only for technical testing.",
         "createDateTime": "2025-12-01T13:31:27Z",
@@ -235,7 +235,7 @@ implementation is ready).
 Note that the returned dataset information is the same as in the FDP.
 
 ```shell
-curl http://localhost:8080/fairdp/dataset/GDIDEMO20251201001D
+curl http://localhost:8080/fairdp/dataset/GDI-DS-20251201001
 ```
 
 ## Individuals (Count)
@@ -278,11 +278,11 @@ ALL of the following criteria:
       "scope": "individual"
     }],
     "requestParameters": {
-      "assemblyId": "GRCh38",
-      "referenceName": "22",
-      "start": "40016503",
+      "assemblyId": "GRCh37",
+      "referenceName": "3",
+      "start": "45864731",
       "referenceBases": "T",
-      "alternateBases": "A"
+      "alternateBases": "C"
     },
     "pagination": {
       "limit": 100
@@ -304,7 +304,7 @@ result-sets with the count of individuals only per matching dataset:
   "response": {
     "resultSets": [
       {
-        "id": "GDIDEMO20251202001D",
+        "id": "GDI-DS-20251202001",
         "setType": "dataset",
         "exists": true,
         "resultsCount": 2504,

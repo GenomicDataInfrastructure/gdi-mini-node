@@ -1,6 +1,10 @@
 name: Docker Image
 
-# The job runs on manual trigger, or when a tag is pushed to the main branch:
+# This workflow runs automatically when
+# - a commit is made to the main branch, or
+# - a tag is pushed.
+# Alternatively, the workflow can be manually triggerred on GitHub (UI).
+
 on:
   workflow_dispatch:
   push:
