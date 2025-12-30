@@ -46,8 +46,8 @@ jobs:
           # 2. Fallback – use branch name and short commit hash.
           # (type=sha rule has lower priority than type=ref.)
           tags: |
-            type=ref,event=tag
-            type=sha,prefix=${{ github.ref_name }}-,format=short
+            type=semver,event=tag,pattern={{version}}
+            type=sha,event=branch,prefix=${{ github.ref_name }}-,format=short
       - name: Build and push the Docker image
         uses: docker/build-push-action@v6
         with:
