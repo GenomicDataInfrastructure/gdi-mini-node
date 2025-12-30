@@ -1,8 +1,10 @@
+from decimal import Decimal
 from logging import getLogger
+from typing import Callable
 
 import pyarrow.dataset as ds
 from isoduration.parser import parse_duration
-from isoduration.types import Duration
+from isoduration.types import Duration, DateDuration
 
 from ._parquet import PQ_INDIVIDUAL_PROPS_SCHEMA, PQ_VCF_INDIVIDUAL_SCHEMA, \
     parquet_filter_for_variants, read_parquet
@@ -53,31 +55,63 @@ class IndividualFilter:
             self, sex: str | None, age: Duration | None, operator: str | None,
     ):
         self.sex = self._convert_from_ontology_key(sex)
-        self.age = f"{operator}{age}" if age and operator else None
-        self._age_compare = self._age_matcher(age, operator)
+
+        self._age = None
+        self._age_operator = None
+        self.age_check_expr = None
+
+        if age is not None and operator is not None:
+            self._age = age.date  # Compare only the date part.
+            self._age_operator = self._operator(operator)
+            self._strict_check = operator == "<" or operator == ">"
+            self.age_check_expr = f"{operator}{age}"
 
     def matches_all(self) -> bool:
-        return self.sex is None and self._age_compare is None
+        return self.sex is None and self._age is None
 
     def has_age_filter(self) -> bool:
-        return self._age_compare is not None
+        return self._age is not None
 
     def matches_age(self, file_age: str) -> bool:
-        if self._age_compare is None:
+        if self._age is None:
             return True
 
-        if file_age is None or not file_age.startswith("P"):
+        if file_age is None:
+            return False
+        elif not file_age.startswith("P"):
+            _log.warning(
+                f"Invalid ISO 8601 Period [{file_age}] encountered in "
+                f"individuals.parquet file"
+            )
             return False
 
         try:
             value = parse_duration(file_age)
-            return self._age_compare(value)
+            _log.debug("Comparing age: '%s' %s", file_age, self.age_check_expr)
+            return self._check_age(value.date)
         except ValueError as e:
             _log.warning(
                 f"Invalid ISO 8601 Period [{file_age}] encountered in "
                 f"individuals.parquet file: {repr(e)}"
             )
             return False
+
+    def _check_age(self, other: DateDuration) -> bool:
+        valid, final = self._age_operator(other.years, self._age.years)
+
+        if valid and not final:
+            _log.debug(
+                "Comparing months: %s vs. %s", other.months, self._age.months)
+            valid, final = self._age_operator(other.months, self._age.months)
+
+        if valid and not final:
+            _log.debug("Comparing days: %s vs. %s", other.days, self._age.days)
+            valid, final = self._age_operator(other.days, self._age.days)
+
+        if valid and not final and self._strict_check:
+            valid = False
+
+        return valid
 
     @staticmethod
     def _convert_from_ontology_key(provided_value: str) -> str | None:
@@ -90,21 +124,25 @@ class IndividualFilter:
         return "UNKNOWN"
 
     @staticmethod
-    def _age_matcher(age: Duration | None, operator: str | None):
-        if age is None or operator is None:
-            return None
+    def _operator(
+            operator: str | None
+    ) -> Callable[[Decimal, Decimal], tuple[bool, bool]]:
+
+        # Every lambda returns 2 booleans:
+        # 1. is the condition satisfied
+        # 2. is the statement final (True), or minor-scale check is also needed.
         if operator == "<":
-            return lambda x: age < x
+            return lambda x, y: (x <= y, x < y)
         if operator == ">":
-            return lambda x: age > x
+            return lambda x, y: (x >= y, x > y)
         if operator == "<=":
-            return lambda x: age <= x
+            return lambda x, y: (x <= y, x < y)
         if operator == ">=":
-            return lambda x: age >= x
+            return lambda x, y: (x >= y, x > y)
         if operator == "=":
-            return lambda x: age == x
+            return lambda x, y: (x == y, False)
         if operator == "!":
-            return lambda x: age != x
+            return lambda x, y: (x != y, True)
         assert False, f"Operator not supported: [{operator}]"
 
 
@@ -265,7 +303,7 @@ def get_results_from_individuals_parquet(
         Results within ResultSets. No individual-records included.
     """
     _log.info("Retrieving individuals where (sex=%s, age=%s)",
-              filters.sex, filters.age)
+              filters.sex, filters.age_check_expr)
 
     results = ResultSets()
     dataset_match_count = 0
@@ -431,6 +469,9 @@ def filter_individuals(
         _log.debug("Returning individuals count as len(INDIVIDUALS): %d",
                    len(individual_indices))
         return len(individual_indices)
+
+    _log.info("Filtering individuals by (sex=%s, age=%s)",
+              filters.sex, filters.age_check_expr)
 
     row_matcher = None
     if len(individual_indices) > 0:
