@@ -2,3 +2,4 @@
 !mini_node
 !poetry.lock
 !pyproject.toml
+!uvicorn-log-config.yaml
