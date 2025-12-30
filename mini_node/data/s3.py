@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Set
 from urllib.parse import urlparse
 
+from iterators import TimeoutIterator
 from minio import Minio
 from minio.error import S3Error
 
@@ -188,10 +189,15 @@ class S3DataSync:
                         suffix=self._suffix,
                         events=("s3:ObjectCreated:*", "s3:ObjectRemoved:*"),
                 ) as events:
+                    it = TimeoutIterator(events, timeout=1.5)
 
-                    for event in events:
+                    for event in it:
                         if stop_signal.is_set():
                             break
+
+                        # Sentinel is returned when timeout occurred:
+                        if event is it.get_sentinel():
+                            continue
 
                         for record in event.get("Records", []):
                             event_name = record["eventName"]
