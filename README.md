@@ -1,16 +1,19 @@
-MINI-NODE
-=========
+GDI MINI-NODE
+=============
 
 This is a minimal single-app solution to run GDI Node services.
-
-It loads data from disk (`./data/` directory), so it has no external
-dependencies. However, it supports JWT-based user authentication (including
-GA4GH Visa checking) by specifying an OIDC service in the configuration.
 
 This application covers following GDI APIs:
 - FAIR Data Point
 - Aggregated Beacon v2 API (`/datasets`, `/g_variants`)
 - Sensitive Beacon v2 API (`/individuals`)
+
+It loads data from disk (`./data/` directory), so it has no external
+dependencies. However, it also supports
+* loading data from an MinIO S3 storage;
+* Basic authentication;
+* JWT-based user authentication (including GA4GH Visa checking) by specifying an
+  OIDC service in the configuration of the target Beacon.
 
 The primary clients for these services are:
 
@@ -18,6 +21,25 @@ The primary clients for these services are:
   for Beacon endpoints;
 * [gdi-userportal-ckanext-fairdatapoint](https://github.com/GenomicDataInfrastructure/gdi-userportal-ckanext-fairdatapoint)
   for FAIR Data Point endpoints.
+
+This project releases its software as Docker images on
+[GitHub packages](https://github.com/GenomicDataInfrastructure/gdi-mini-node/pkgs/container/gdi-mini-node).
+
+If you want to share feedback, please
+[report an issue](https://github.com/GenomicDataInfrastructure/gdi-mini-node/issues)
+or
+[start a new discussion](https://github.com/GenomicDataInfrastructure/gdi-mini-node/discussions).
+
+This software is ready for early testing by the GDI members who want to evaluate
+alternative solutions to existing FDP and Beacon solutions that heavily depend
+on the Mongo database. On contrast, this gdi-mini-node solution runs as a single
+application that mostly consumes disk space for its data, which are compressed
+Parquet files. This project also includes scripts for generating the Parquet
+files from VCFs.
+
+Future developments to this project depend on general interest and individual
+contributions. This code belongs to public domain for the sake of the European
+Genomic  Data Infrastructure project.
 
 
 FAIR Data Point
@@ -29,8 +51,8 @@ Implementation under the `mini_node.fdp` module follows standards:
    * defines the main entry-point and catalogue navigation,
    * adds requirements for Profiles and SHACLs,
    * requires RDF Turtle (default) and JSON-LD response formats.
-2. [HealthDCAT-AP](https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/) v5:
-   * defines the data model that is also used within European Health Data Space (EHDS)
+2. [GDI metadata v1.1](https://github.com/GenomicDataInfrastructure/gdi-metadata):
+   * defines the common metadata model for the GDI catalogues and datasets.
 3. [The Profiles Vocabulary](https://www.w3.org/TR/dx-prof/) _18 December 2019_
    * defines vocabulary for referencing data model properties (especially SHACL files),
    * there are endpoints for viewing item-specific profiles.
@@ -98,7 +120,7 @@ Additional endpoints for the aggregated-data Beacon are used by the GDI User
 Portal to find available cohorts from datasets and allele-frequencies for a
 variant:
 
-* `POST /datasets` (coming soon)
+* `POST /datasets`
 * `POST /g_variants`
 
 Also in here, this application closely aligns with the
@@ -182,7 +204,7 @@ Getting Started
 ---------------
 
 There are many ways to run the software. In either way, your entrypoint to the
-application is at http://localhost:8080.
+application is at http://localhost:8080 in the following examples.
 
 ```shell
 # Via Docker Compose
@@ -191,7 +213,7 @@ docker compose up
 
 # Via Docker
 docker build -t mininode .
-docker run --rm -it -p 8080:8000 \
+docker run --rm -it -p 127.0.0.1:8080:8000 \
   -v "$PWD/config:/app/config" \
   -v "$PWD/data:/app/data" \
   mininode
@@ -276,8 +298,6 @@ Therefore, to register a new dataset:
      the name for the directory.
    * Technically, a dataset can have both reference genome directories, too.
 4. Create Parquet files for the dataset to be discoverable through a Beacon.
-   * For the allele-frequency Beacon, run script **vcf_to_af_parquet.py**.
-   * For the individual-based Beacon, run script **vcf_to_individuals.py**.
    * Details about running the script are given below.
 
 **NOTE**: if you enable S3 data-syncing in the mini-node configuration, you
