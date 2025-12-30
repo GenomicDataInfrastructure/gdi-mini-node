@@ -19,8 +19,12 @@ configuration:
   productionStatus: DEV  # DEV, TEST, PROD (just info)
   securityLevel: CONTROLLED # PUBLIC, REGISTERED, CONTROLLED (just info)
   granularity: record    # boolean, count, record (affects responses)
-  hideLowerCounts: 1     # 1 is the minimum value  (affects count-responses)
-  #file_secret:           # if files are encrypted, this is the password
+
+  # If you want to avoid exposing the number of individuals with rare variants,
+  # you can increase this threshold (value 1 does not hide variant matches where
+  # only 1 individual is found). However, typically this censoring should be
+  # also done in the VCF files. This feature is just a second protection layer.
+  hideLowerCounts: 1     # 1 is the minimum value (affects individuals response)
 
   # It's possible to restrict access using JWT validation or Basic
   # authentication but not both.

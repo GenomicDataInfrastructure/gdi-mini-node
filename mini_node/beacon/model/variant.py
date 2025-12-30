@@ -1,5 +1,4 @@
-from fastapi_cloud_cli.utils.pydantic_compat import model_dump
-from typing_extensions import Annotated
+from typing import Annotated
 
 from pydantic import (
     BaseModel,
@@ -54,9 +53,9 @@ class VariantQueryParameters(BaseModel):
             or self.mateName is not None \
             or self.aminoacidChange is not None \
             or self.genomicAlleleShortForm is not None \
-            or self.alternateBases is not None \
             or self.variantMinLength is not None \
-            or self.variantMaxLength is not None
+            or self.variantMaxLength is not None \
+            or self.assemblyId not in BeaconAssembly
 
     def has_sufficient_values(self) -> bool:
         return self.assemblyId is not None \
@@ -67,4 +66,5 @@ class VariantQueryParameters(BaseModel):
             and self.start is not None
 
     def is_not_sufficient(self) -> bool:
-        return not self.has_unsupported_values() and self.has_sufficient_values()
+        return self.has_unsupported_values() or \
+            not self.has_sufficient_values()

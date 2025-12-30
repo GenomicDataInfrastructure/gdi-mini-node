@@ -1,8 +1,8 @@
 from datetime import datetime
+from typing import Annotated
 
 from pydantic import AnyUrl, BaseModel, HttpUrl, PositiveInt, UrlConstraints, \
     ConfigDict
-from typing_extensions import Annotated
 
 from .model.enums import Granularity
 from .model.framework import BeaconEnvironment

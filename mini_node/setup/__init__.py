@@ -1,9 +1,9 @@
 import base64
 from logging import getLogger
-from typing import Type
 from os.path import abspath, join
 from sys import exit
 from tomllib import load
+from typing import Type
 
 from yaml import safe_load, YAMLError
 

@@ -1,11 +1,11 @@
+from dataclasses import dataclass
 from logging import getLogger
 from uuid import uuid1
-from dataclasses import dataclass
 
 import pyarrow as pa
-import pyarrow.compute as pc
 import pyarrow.dataset as ds
 
+from ._parquet import parquet_filter_for_variants
 from ..model.allele_freq import (
     AlleleFreqResult,
     FrequencyInPopulations,
@@ -17,10 +17,10 @@ from ..model.allele_freq import (
     SequenceLocation,
 )
 from ..model.common import BeaconRequest
+from ..model.framework.result_sets import ResultSet, ResultSets
 from ..model.variant import VariantQueryParameters
 from ...data import DATA
 from ...data.registry import BeaconAssembly
-from ._parquet import parquet_filter_for_variants
 
 """Implementation for variant lookup (only for aggregated Beacon).
 
@@ -67,17 +67,15 @@ class AFRow:
     an: int
 
 
-def find_datasets_allele_frequencies(
-        request: BeaconRequest,
-) -> dict[str, list[AlleleFreqResult]]:
-    """Searches for matching variants in Parquet files and returns a dictionary
+def find_datasets_allele_frequencies(request: BeaconRequest) -> ResultSets:
+    """Searches for matching variants in Parquet files and returns a result-set
     of dataset IDs and its matching allele frequencies (per cohort).
     Currently, this implementation performs file readings in a single thread.
     """
 
     params = request.query.requestParameters
     if params is None or params.is_not_sufficient():
-        return {}
+        return ResultSets()
 
     assembly = BeaconAssembly(params.assemblyId)
 
@@ -88,24 +86,32 @@ def find_datasets_allele_frequencies(
     limit = page.limit if page and page.limit is not None else 10
     skip = page.skip if page and page.skip is not None else 0
 
-    results = {}
+    results = []
     dataset_match_count = 0
 
     for dataset_id, parquet_file in dataset_files.items():
         skip_details = dataset_match_count < skip
-        allele_frequencies = find_af(request, parquet_file, skip_details,
-                                     assembly, params.referenceName)
+        allele_frequencies = find_af(
+            request, parquet_file, skip_details,
+            assembly, params.referenceName,
+        )
         if allele_frequencies == False:
             continue
 
         dataset_match_count += 1
 
         if isinstance(allele_frequencies, AlleleFreqResult):
-            results[dataset_id] = allele_frequencies
+            results.append(ResultSet(
+                id=dataset_id,
+                resultsCount=1,
+                results=[allele_frequencies])
+            )
+
             if len(results) >= limit:
                 break
 
-    return results
+    _log.info("Allele-frequency results contains %d datasets.", len(results))
+    return ResultSets(resultSets=results)
 
 
 def find_af(
@@ -144,7 +150,6 @@ def find_af(
         )
         af_rows.append(af_row)
 
-    _log.debug("af rows: %s", len(af_rows))
     return _result(af_variant, af_rows)
 
 
@@ -172,7 +177,7 @@ def _read_parquet(request: BeaconRequest, parquet_file: str) -> pa.Table | None:
         _log.debug(
             "No matching Parquet rows in [%s] for allele-freq query: %s",
             parquet_file,
-            query,
+            query.model_dump(exclude_none=True),
         )
         return None
 
@@ -180,7 +185,7 @@ def _read_parquet(request: BeaconRequest, parquet_file: str) -> pa.Table | None:
         "Found %d matching row(s) in [%s] for allele-freq query: %s",
         table.num_rows,
         parquet_file,
-        query,
+        query.model_dump(exclude_none=True),
     )
     return table
 

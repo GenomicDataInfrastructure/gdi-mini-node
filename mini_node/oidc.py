@@ -1,12 +1,12 @@
-import time
 import logging
-import httpx
+import time
 from collections import OrderedDict
 from typing import Optional, List
 
+import httpx
 import jwt
-from jwt import PyJWK
 from jwt import InvalidTokenError, ExpiredSignatureError
+from jwt import PyJWK
 
 _log = logging.getLogger(__name__)
 
@@ -99,6 +99,10 @@ class OidcVerifier:
 
         cached_validation_result = self._lru.get(token)
         if cached_validation_result is not None:
+            _log.debug(
+                "Using a cached JWT validation result: [%s]",
+               cached_validation_result,
+            )
             return cached_validation_result
 
         if self._jwk is None:
@@ -109,9 +113,12 @@ class OidcVerifier:
                 token,
                 key=self._jwk.key,
                 algorithms=[self._jwk.algorithm_name],
-                options={"verify_exp": True, "verify_iat": True},
+                options={
+                    "verify_exp": True, "verify_iat": True, "verify_aud": False,
+                },
             )
-        except InvalidTokenError:
+        except InvalidTokenError as e:
+            _log.debug("JWT decoding failed: [%s]", repr(e))
             self._lru.put(token, False)
             return False
 
@@ -124,6 +131,10 @@ class OidcVerifier:
         passport = claims.get("ga4gh_passport_v1")
         valid = self._check_passport(sub, passport)
 
+        _log.info(
+            "Validation outcome for the JWT token [sub=%s]: %s.", sub, valid,
+        )
+
         self._lru.put(token, valid)
         return valid
 
@@ -134,6 +145,7 @@ class OidcVerifier:
                         passport_claim: list[str] | None) -> bool:
         if self._required_visas is None or len(self._required_visas) == 0:
             # Skip passport checking if there are no required visas configured.
+            _log.debug("Skipping passport validation (visas not required).")
             return True
 
         if not isinstance(passport_claim, list) or len(passport_claim) == 0:

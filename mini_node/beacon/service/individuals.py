@@ -1,14 +1,15 @@
 from logging import getLogger
 
 import pyarrow.dataset as ds
-from isoduration.types import Duration
 from isoduration.parser import parse_duration
+from isoduration.types import Duration
 
 from ._parquet import PQ_INDIVIDUAL_PROPS_SCHEMA, PQ_VCF_INDIVIDUAL_SCHEMA, \
     parquet_filter_for_variants, read_parquet
 from ..model.common import BeaconRequest, IncludeResponses
 from ..model.framework.result_sets import ResultSet, ResultSets
 from ..model.variant import VariantQueryParameters
+from ..setup import BeaconSetup
 from ...data import DATA
 from ...data.registry import BeaconAssembly
 
@@ -48,7 +49,9 @@ class IndividualFilter:
     Note that comparing ISO 8601 periods can be imprecise.
     """
 
-    def __init__(self, sex: str | None, age: Duration | None, operator: str | None):
+    def __init__(
+            self, sex: str | None, age: Duration | None, operator: str | None,
+    ):
         self.sex = self._convert_from_ontology_key(sex)
         self.age = f"{operator}{age}" if age and operator else None
         self._age_compare = self._age_matcher(age, operator)
@@ -105,8 +108,9 @@ class IndividualFilter:
         assert False, f"Operator not supported: [{operator}]"
 
 
-
-def get_individuals_count(request: BeaconRequest) -> ResultSets:
+def get_individuals_count(
+        request: BeaconRequest, setup: BeaconSetup,
+) -> ResultSets:
     ## PARAMS ##
 
     # No data for testMode requests:
@@ -127,7 +131,7 @@ def get_individuals_count(request: BeaconRequest) -> ResultSets:
         params = None
     if params is not None and params.has_unsupported_values():
         _log.warning("Returning empty results due to unsupported request "
-                  "parameters: %s", params.model_dump(exclude_none=True))
+                     "parameters: %s", params.model_dump(exclude_none=True))
         return ResultSets()
 
     # Filters object is returned when there are no validation issues:
@@ -145,10 +149,15 @@ def get_individuals_count(request: BeaconRequest) -> ResultSets:
 
     # If variant-filter is missing, just read the individuals.parquet file.
     if params is None:
-        return get_results_from_individuals_parquet(filters, skip, limit)
+        results = get_results_from_individuals_parquet(filters, skip, limit)
+    else:
+        # Filter variants-file only when there are variant-parameters provided.
+        results = get_results_from_variants(params, filters, skip, limit, setup)
 
-    # Filter variants-file only when there are variant-parameters provided.
-    return get_results_from_variants(params, filters, skip, limit)
+    _log.info("Individual variant results contains %d datasets for query: %s",
+              len(results.resultSets), request.model_dump(exclude_none=True))
+
+    return results
 
 
 def resolve_variant_filter(
@@ -287,6 +296,7 @@ def get_results_from_variants(
         filters: IndividualFilter,
         skip: int,
         limit: int,
+        setup: BeaconSetup,
 ) -> ResultSets:
     """
     Performs the entire the search in two stages per each dataset:
@@ -301,13 +311,16 @@ def get_results_from_variants(
         filters: IndividualFilter for filtering individuals.
         skip: Number of matching datasets to skip before collecting results.
         limit: Maximum number of results to collect.
+        setup: BeaconSetup for filtering individuals.
 
     Returns:
         Results within ResultSets. No individual-records included.
     """
     # Obtain datasets and their matching variant position file:
     dataset_files = DATA.sensitive_beacon.get_dataset_individuals(
-        BeaconAssembly(params.assemblyId), params.referenceName, params.start[0],
+        BeaconAssembly(params.assemblyId),
+        params.referenceName,
+        params.start[0],
     )
 
     results = ResultSets()
@@ -316,6 +329,11 @@ def get_results_from_variants(
     for dataset_id, parquet_files in dataset_files.items():
         individuals_count = filter_individuals_by_variant(
             params, filters, parquet_files[1], parquet_files[0])
+
+        # Censoring enables to filter out rare individuals with rare variants.
+        # Default censoring threshold is 1, which essentially does not censor.
+        individuals_count = setup.censor_count(individuals_count)
+
         if individuals_count is None:
             continue
 
