@@ -1,6 +1,6 @@
 [project]
 name = "gdi-mini-node"
-version = "0.9.0"
+version = "0.9.1a0"
 description = "GDI dataset services (FAIR Data Point v1.2, GA4GH Beacon v2)"
 readme = "README.md"
 license = "Unlicense"

@@ -9,6 +9,15 @@ Releases and associated Docker images are published on
 [GitHub](https://github.com/GenomicDataInfrastructure/gdi-mini-node).
 
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Fixed
+
+
 ## 0.9.0
 
 Initial version to demonstrate a **FAIR Data Point**, **aggregated Beacon**, and
