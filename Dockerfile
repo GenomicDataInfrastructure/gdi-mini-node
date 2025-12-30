@@ -16,7 +16,7 @@ ENV POETRY_VIRTUALENVS_CREATE=false
 
 # Deploy application with dependencies:
 RUN mkdir -p /app/data && chown -R nobody:nogroup /app/
-COPY --chown=nobody:nogroup pyproject.toml poetry.lock /app/
+COPY --chown=nobody:nogroup pyproject.toml poetry.lock uvicorn-log-config.yaml /app/
 RUN cd /app && poetry install --no-root --compile
 COPY --chown=nobody:nogroup mini_node /app/mini_node
 
@@ -37,4 +37,7 @@ ENV NO_COLOR=1
 # This tells uvicorn to trust 'X-Forwarded-*' headers from any IP address:
 ENV FORWARDED_ALLOW_IPS="*"
 
-CMD ["fastapi", "run", "--proxy-headers", "--port", "8000", "/app/mini_node"]
+CMD ["uvicorn", "mini_node:app", \
+  "--host", "0.0.0.0", "--port", "8000", \
+  "--log-config", "uvicorn-log-config.yaml", \
+  "--proxy-headers", "--no-server-header", "--no-use-colors"]
