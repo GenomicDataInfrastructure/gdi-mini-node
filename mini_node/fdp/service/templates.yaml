@@ -177,22 +177,11 @@ templates:
             rdfs:label: >-
               Access to data is conditional on the issuance of a permit by the
               GDI national node after submission of a data request application.
-        - a: dcat:Distribution
-          dcatap:applicableLegislation: https://www.riigiteataja.ee/en/eli/508042019001/consolide
-          dcat:accessURL: https://genomics.ut.ee/en/content/estonian-biobank
-          dct:title: Estonian Biobank
-          dct:description: Request dataset access for research by contacting Estonian Biobank
-          dct:rights:
-            a: dct:RightsStatement
-            rdfs:label: >-
-              Access to data is conditional on the issuance of a permit by the
-              Scientific Advisory Committee of Estonian Biobank after
-              submission of a data request application.
       dcat:theme: $FDP_CONFIG.theme
       dcatap:applicableLegislation: $FDP_CONFIG.legislation
 
       dct:accessRights: $FDP_CONFIG.access_right
-      dct:conformsTo: $FDP_URL/profile/dataset
+      dct:conformsTo: http://data.gdi.eu/core/p2/1MGCompliant
       # dct:description: <from-params>
       # dct:identifier: <from-params>
       # dct:title: <from-params>
@@ -266,12 +255,15 @@ templates:
       record_count: healthdcatap:numberOfRecords
       individual_count: healthdcatap:numberOfUniqueIndividuals
       data_provider_name:
+        dct:creator:
+          a: foaf:Agent
+          foaf:name:  # Value is inserted here
         dct:publisher:
           a: foaf:Agent
-          foaf:name:
+          foaf:name:  # Value is inserted here
           dcat:contactPoint:
             a: vcard:Kind
-            vcard:fn:
+            vcard:fn:  # Value is inserted here
           healthdcatap:trustedDataHolder: true
 
   # Customised based on the specification: https://www.w3.org/TR/dx-prof/
@@ -288,4 +280,4 @@ templates:
           dct:conformsTo: https://www.w3.org/TR/shacl/
           dct:format: https://w3id.org/mediatype/text/turtle
           prof:hasRole: http://www.w3.org/ns/dx/prof/role/Validation
-          prof:hasArtifact:
+          prof:hasArtifact:  # Value is inserted here

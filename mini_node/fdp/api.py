@@ -1,8 +1,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Path, Request
-from rdflib import Graph
 from fastapi.responses import Response, PlainTextResponse
+from rdflib import Graph
 from starlette.status import HTTP_404_NOT_FOUND
 
 import mini_node.fdp.service as fdp

@@ -1,467 +1,492 @@
-# These shapes are based on HealthDCAT-AP v5:
-# https://healthdataeu.pages.code.europa.eu/healthdcat-ap/releases/release-5/#Dataset
-# dct:conformsTo is required by FAIR Data Point v1.2.
+# NOTE: this file contains 5 SHACL definitions in sequence:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/Dataset.ttl
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/AgentCreator.ttl
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/AgentHdab.ttl
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/Kind.ttl
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/dee59b91dd32c1a33f6a7fc9e8ef452c235a997a/Formulasation(shacl)/core/PiecesShape/Distribution.ttl
+#
+# The following content comes from:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/Dataset.ttl
 
-@prefix         dcat: <http://www.w3.org/ns/dcat#> .
-@prefix       dcatap: <http://data.europa.eu/r5r/> .
-@prefix          dct: <http://purl.org/dc/terms/> .
-@prefix         foaf: <http://xmlns.com/foaf/0.1/> .
+# SPDX-FileCopyrightText: 2025 Health-RI
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dqv: <http://www.w3.org/ns/dqv#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix healthdcatap: <http://healthdataportal.eu/ns/health#> .
-@prefix         prov: <http://www.w3.org/ns/prov#> .
-@prefix         rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix           sh: <http://www.w3.org/ns/shacl#> .
-@prefix         skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix         spdx: <http://spdx.org/rdf/terms#> .
-@prefix        vcard: <http://www.w3.org/2006/vcard/ns#> .
-@prefix          xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix gdi: <http://data.gdi.eu/core/p2/> .
+@prefix adms: <http://www.w3.org/ns/adms#> .
+@prefix dcatap: <http://data.europa.eu/r5r/> .
+@prefix dpv: <https://w3id.org/dpv#> .
+@prefix eu: <http://publications.europa.eu/resource/authority/access-right/> .
+@prefix type: <https://publications.europa.eu/resource/authority/dataset-type/> .
+@prefix dpv-pd: <https://w3id.org/dpv/dpv-pd#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dash: <http://datashapes.org/dash#> .
 
-# DatasetShape is based on HealthDCAT-AP v5.
-# dct:conformsTo is required by FAIR Data Point v1.2.
+gdi:DatasetShape a owl:Ontology, sh:NodeShape;
+  rdfs:label "Excel template for Dataset class"@en, "Dataset"@en;
+  rdfs:comment "Excel template for Dataset class"@en;
+  dct:description "This is an excel template for Dataset class in Health RI Core plateau 2."@en;
+  owl:versionInfo "0.1";
+  dct:modified "2025-02-10T00:00:00.000Z"^^xsd:dateTime;
+  sh:targetClass dcat:Dataset;
+  sh:property <http://data.gdi.eu/core/p2/DatasetShape#access-rights>, <http://data.gdi.eu/core/p2/DatasetShape#applicable-legislation>,
+    <http://data.gdi.eu/core/p2/DatasetShape#conforms-to>, <http://data.gdi.eu/core/p2/DatasetShape#creator>,
+    <http://data.gdi.eu/core/p2/DatasetShape#description>, <http://data.gdi.eu/core/p2/DatasetShape#distribution>,
+    <http://data.gdi.eu/core/p2/DatasetShape#hdab>, <http://data.gdi.eu/core/p2/DatasetShape#identifier>, <http://data.gdi.eu/core/p2/DatasetShape#is-referenced-by>,
+    <http://data.gdi.eu/core/p2/DatasetShape#legal-basis>,
+    <http://data.gdi.eu/core/p2/DatasetShape#number-of-records>, <http://data.gdi.eu/core/p2/DatasetShape#number-of-unique-individuals>,
+    <http://data.gdi.eu/core/p2/DatasetShape#other-identifier>, <http://data.gdi.eu/core/p2/DatasetShape#theme>,
+    <http://data.gdi.eu/core/p2/DatasetShape#title>, <http://data.gdi.eu/core/p2/DatasetShape#type> .
 
-:DatasetShape a sh:NodeShape ;
-  sh:targetClass dcat:Dataset ;
-  sh:property [
-    sh:path dcat:contactPoint ;
-    sh:description "Contact information that can be used for sending comments about the Dataset." ;
-    sh:node :ContactPointShape ;
-  ], [
-    sh:path dcat:distribution ;
-    sh:description "An available Distribution for the Dataset." ;
-    sh:node :Distribution_Shape ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dcat:theme ;
-    sh:description "A category of the Dataset." ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:hasValue <http://publications.europa.eu/resource/authority/data-theme/HEAL> ;
-  ], [
-    sh:path dcat:hasVersion ;
-    sh:description "A related Dataset that is a version, edition, or adaptation of the described Dataset." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:inSeries ;
-    sh:description "A dataset series of which the dataset is part." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:keyword ;
-    sh:description "A keyword or tag describing the Dataset." ;
-    sh:nodeKind sh:Literal ;
-  ], [
-    sh:path dcat:landingPage ;
-    sh:description "A web page that provides access to the Dataset, its Distributions and/or additional information." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:qualifiedRelation ;
-    sh:description "Link to a description of a relationship with another resource." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:spatialResolutionInMeters ;
-    sh:description "The minimum spatial separation resolvable in a dataset, measured in meters." ;
-    sh:datatype xsd:decimal ;
-    sh:minInclusive 0 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:temporalResolution ;
-    sh:description "An interval of time that is named or defined by its start and end dates)." ;
-    sh:datatype xsd:duration ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:version ;
-    sh:description "The version indicator (name or identifier) of a resource." ;
-    sh:nodeKind sh:Literal ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcatap:applicableLegislation ;
-    sh:description "The legislation that mandates the creation or management of the Dataset." ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dct:accessRights ;
-    sh:description "Information that indicates whether the Dataset is publicly accessible, has access restrictions or is not public." ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:conformsTo ;
-    sh:description "An established standard to which the described resource conforms." ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:description ;
-    sh:description "A free-text information about the Dataset." ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dct:identifier ;
-    sh:description "The main identifier for the Dataset, e.g. the URI or other unique identifier in the context of the Catalogue." ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dct:title ;
-    sh:description "A name given to the Dataset." ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dct:accrualPeriodicity ;
-    sh:description "The frequency at which the Dataset is updated." ;
-    sh:class dct:Frequency ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:alternative ;
-    sh:description "An alternative name for the Dataset." ;
-    sh:nodeKind sh:Literal ;
-  ], [
-    sh:path dct:creator ;
-    sh:description "An entity responsible for producing the dataset." ;
-    sh:node :AgentShape ;
-  ], [
-    sh:path dct:isReferencedBy ;
-    sh:description "A related resource, such as a publication, that references, cites, or otherwise points to the dataset." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:issued ;
-    sh:description "The date of formal issuance (e.g.: publication) of the Dataset." ;
-    sh:datatype xsd:dateTime ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:language ;
-    sh:description "A language of the Dataset." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:modified ;
-    sh:description "The most recent date on which the Dataset was changed or modified." ;
-    sh:datatype xsd:dateTime ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:provenance ;
-    sh:description "Information about how the data was collected, including methodologies, tools, and protocols used" ;
-    sh:class dct:ProvenanceStatement ;
-  ], [
-    sh:path dct:publisher ;
-    sh:description "An entity (organisation) responsible for making the Dataset available." ;
-    sh:node :HealthPublisherAgent_Shape ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:relation ;
-    sh:description "A related resource." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:source ;
-    sh:description "A related Dataset from which the described Dataset is derived." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:spatial ;
-    sh:description "A geographic region that is covered by the Dataset." ;
-    sh:class dct:Location ;
-  ], [
-    sh:path dct:temporal ;
-    sh:description "A temporal period that the Dataset covers." ;
-    sh:node :PeriodOfTime_Shape ;
-  ], [
-    sh:path dct:type ;
-    sh:description "A type of the Dataset." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path foaf:page ;
-    sh:description "A page or document about this Dataset. Refers to documentation." ;
-    sh:class foaf:Document ;
-  ], [
-    sh:path healthdcatap:analytics ;
-    sh:description "An analytics distribution of the dataset." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path healthdcatap:hasCodeValues ;
-    sh:description "Health classifications, or other classification-like systems and their codes that can be associated with the dataset." ;
-    # Once the controlled vocabulary becomes available, it will be expressed as an IRI.
-    sh:nodeKind sh:BlankNodeOrIRI ;
-    sh:node :HasCodeValues_Shape ;
-  ], [
-    sh:path healthdcatap:hasCodingSystem ;
-    sh:description "Coding systems in use (ex: ICD-10-CM, DGRs, SNOMED=CT)." ;
-    # Once the controlled vocabulary becomes available, it will be expressed as an IRI.
-    sh:nodeKind sh:BlankNodeOrIRI ;
-  ], [
-    sh:path healthdcatap:hdab ;
-    sh:description "" ;
-    sh:node :HealthAgent_Shape ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path healthdcatap:healthCategory ;
-    sh:description "" ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-  ], [
-    sh:path healthdcatap:healthTheme ;
-    sh:description "A category of the Dataset or tag describing the Dataset." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path healthdcatap:maxTypicalAge ;
-    sh:description "Maximum typical age of the population within the dataset." ;
-    sh:datatype xsd:nonNegativeInteger ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path healthdcatap:minTypicalAge ;
-    sh:description "Minimum typical age of the population within the dataset." ;
-    sh:datatype xsd:nonNegativeInteger ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path healthdcatap:numberOfRecords ;
-    sh:description "Size of the dataset in terms of the number of records." ;
-    sh:datatype xsd:nonNegativeInteger ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path healthdcatap:numberOfUniqueIndividuals ;
-    sh:description "Number of records for unique individuals." ;
-    sh:datatype xsd:nonNegativeInteger ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path healthdcatap:populationCoverage ;
-    sh:description "A definition of the population within the dataset." ;
-    sh:nodeKind sh:Literal ;
-  ], [
-    sh:path healthdcatap:retentionPeriod ;
-    sh:description "A temporal period which the dataset is available for secondary use." ;
-    sh:node :PeriodOfTime_Shape ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path prov:qualifiedAttribution ;
-    sh:description "An Agent having some form of responsibility for the resource." ;
-    sh:class prov:Attribution ;
-  ], [
-    sh:path prov:wasGeneratedBy ;
-    sh:description "An activity that generated, or provides the business context for, the creation of the dataset." ;
-    sh:class prov:Activity ;
-  ] .
+<http://data.gdi.eu/core/p2/DatasetShape#access-rights> sh:path dct:accessRights;
+  sh:name "access rights"@en;
+  sh:description "Information that indicates whether the Dataset is publicly accessible, has access restrictions or is not public. This property must be filled with a value from a controlled vocabulary."@en;
+  sh:minCount 1;
+  sh:maxCount 1;
+  sh:nodeKind sh:IRI;
+  sh:defaultValue <http://publications.europa.eu/resource/authority/access-right/PUBLIC>;
+  sh:in _:63db696725d34edebb948ae5f263a6626;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:EnumSelectEditor .
 
-# This is customised. More info about foaf namespace:
-# https://sparontologies.github.io/foaf/current/foaf.html
-:AgentShape a sh:NodeShape ;
-  sh:targetClass foaf:Organization ;
-  sh:property [
-    sh:path foaf:name ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path foaf:mbox ;
-    sh:nodeKind sh:IRI ;
-    sh:pattern "^mailto:.+@.+\\..+$" ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path foaf:homepage ;
-    sh:nodeKind sh:IRI ;
-    sh:pattern "^https?://.+$" ;
-    sh:maxCount 1 ;
-  ] .
+_:63db696725d34edebb948ae5f263a6626 rdf:first eu:PUBLIC;
+  rdf:rest _:63db696725d34edebb948ae5f263a6627 .
 
-# More info about "vcard": https://www.w3.org/TR/vcard-rdf/
-:ContactPointShape a sh:NodeShape ;
-  sh:targetClass vcard:Organization ;
-  sh:property [
-    sh:path vcard:fn ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path vcard:hasEmail ;
-    sh:nodeKind sh:IRI ;
-    sh:pattern "^mailto:.+@.+\\..+$" ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path vcard:hasURL ;
-    sh:nodeKind sh:IRI ;
-    sh:pattern "^https?://.+$" ;
-    sh:maxCount 1 ;
-  ] .
+_:63db696725d34edebb948ae5f263a6627 rdf:first eu:RESTRICTED;
+  rdf:rest _:63db696725d34edebb948ae5f263a6628 .
 
-# Health Data Access Body Shape (Only for dcat:Dataset hdab)
-:HealthAgent_Shape a sh:NodeShape ;
-  sh:extends :Agent_Shape ;
-  sh:property [
-    sh:path dcat:contactPoint ;
-    sh:node :ContactPointShape ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-    sh:severity sh:Violation ;
-    sh:message "Each Health Agent must have exactly one dcat:contactPoint." ;
-  ] .
+_:63db696725d34edebb948ae5f263a6628 rdf:first eu:NON_PUBLIC;
+  rdf:rest rdf:nil .
 
-# Health Publisher Agent Shape (Only for dcat:Dataset publisher)
-:HealthPublisherAgent_Shape a sh:NodeShape ;
+<http://data.gdi.eu/core/p2/DatasetShape#applicable-legislation> sh:path dcatap:applicableLegislation;
+  sh:name "applicable legislation"@en;
+  sh:description "The legislation that mandates the creation or management of the Dataset. The default value is the ELI of the EHDS."@en;
+  sh:nodeKind sh:IRI;
+  sh:minCount 1;
+  sh:defaultValue <http://data.europa.eu/eli/reg/2025/327/oj>;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
 
-	# The HealthPublisherAgent_Shape was intended to extend HealthAgent_Shape by
-	# adding specific constraints (dct:description and healthdcatap:trustedDataHolder),
-	# but due to inconsistent support for multi-level inheritance across SHACL
-	# validators, we opted to inherit directly from Agent_Shape and duplicate the
-	# dcat:contactPoint constraint.
-	#sh:extends :HealthAgent_Shape ;
+gdi:ExternallyGoverned a dct:Standard;
+  rdfs:label "Externally governed"@en .
 
-  sh:extends :Agent_Shape ;
-  sh:property [
-    sh:path dcat:contactPoint ;
-    sh:node :ContactPointShape ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-    sh:severity sh:Violation ;
-    sh:description "Each foaf:Agent must have exactly one dcat:contactPoint." ;
-  ] ,	[
-    sh:path dct:description ;
-    sh:nodeKind sh:Literal ;
-    sh:maxCount 1 ;
-    sh:severity sh:Violation ;
-    sh:description "Each dct:publisher must have at most one dct:description (Publisher Note) as a literal." ;
-  ], [
-    sh:path healthdcatap:trustedDataHolder ;
-    sh:datatype xsd:boolean ;
-    sh:maxCount 1 ;
-    sh:severity sh:Violation ;
-    sh:description "Each dct:publisher must have at most one healthdcatap:trustedDataHolder with a boolean value." ;
-  ] .
+gdi:1MGCompliant a dct:Standard;
+  rdfs:label "1+MG compliant"@en .
 
-:HasCodeValues_Shape a sh:NodeShape ;
-  sh:targetClass skos:Concept ;
-  sh:property [
-    sh:path dct:identifier ;
-    sh:nodeKind sh:Literal ;
-    sh:datatype xsd:anyURI ;
-    sh:severity sh:Violation
-  ], [
-    sh:path skos:inScheme ;
-    sh:nodeKind sh:IRI ;
-    sh:severity sh:Violation
-  ] .
+gdi:1MGCohort a dct:Standard;
+  rdfs:label "1+MG cohort"@en .
 
-:PeriodOfTime_Shape a sh:NodeShape ;
-  sh:targetClass dct:PeriodOfTime ;
-  sh:property [
-    sh:path dcat:startDate ;
-    sh:datatype xsd:date ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:endDate ;
-    sh:datatype xsd:date ;
-    sh:minCount 1 ;
-    sh:maxCount 1 ;
-  ] .
+<http://data.gdi.eu/core/p2/DatasetShape#conforms-to> sh:path dct:conformsTo;
+  sh:name "conforms to"@en;
+  sh:description "An implementing rule or other specification"@en;
+  sh:class dct:Standard;
+  sh:nodeKind sh:IRI;
+  sh:in ( gdi:ExternallyGoverned gdi:1MGCompliant gdi:1MGCohort );
+  dash:viewer dash:URIViewer;
+  dash:editor dash:EnumSelectEditor .
 
-:RightsStatement_Shape a sh:NodeShape ;
-  sh:targetClass dct:RightsStatement ;
-  sh:property [
-    sh:path rdfs:label ;
-    sh:nodeKind sh:Literal ;
-    sh:minCount 1 ;
-  ] .
+<http://data.gdi.eu/core/p2/DatasetShape#creator> sh:path dct:creator;
+  sh:name "creator"@en;
+  sh:description "An entity responsible for producing the dataset."@en;
+  sh:minCount 1;
+  sh:node gdi:AgentCreatorShape;
+  dash:viewer dash:DetailsViewer;
+  dash:editor dash:BlankNodeEditor .
 
-:Distribution_Shape a sh:NodeShape ;
-  sh:targetClass dcat:Distribution ;
-  sh:property [
-    sh:path dcat:accessService ;
-    sh:description "A data service that gives access to the distribution of the dataset." ;
-    sh:nodeKind sh:BlankNodeOrIRI ;
-    sh:class dcat:DataService ;
-  ], [
-    sh:path dcat:accessURL ;
-    sh:description "A URL that gives access to a Distribution of the Dataset." ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dcat:byteSize ;
-    sh:description "The size of a Distribution in bytes." ;
-    sh:datatype xsd:nonNegativeInteger ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:checksum ;
-    sh:description "A mechanism that can be used to verify that the contents of a distribution have not changed." ;
-    sh:nodeKind sh:BlankNode ;
-    sh:class spdx:Checksum ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:compressFormat ;
-    sh:description "The format of the file in which the data is contained in a compressed form, e.g. to reduce the size of the downloadable file." ;
-    sh:nodeKind sh:IRI ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:downloadURL ;
-    sh:description "A URL that is a direct link to a downloadable file in a given format." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dcat:mediaType ;
-    sh:description "The media type of the Distribution as defined in the official register of media types managed by IANA." ;
-    sh:nodeKind sh:IRI ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:packageFormat ;
-    sh:description "The format of the file in which one or more data files are grouped together, e.g. to enable a set of related files to be downloaded together." ;
-    sh:nodeKind sh:IRI ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:spatialResolutionInMeters ;
-    sh:description "The minimum spatial separation resolvable in a dataset distribution, measured in meters." ;
-    sh:datatype xsd:decimal ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcat:temporalResolution ;
-    sh:description "The minimum time period resolvable in the dataset distribution." ;
-    sh:datatype xsd:duration ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dcatap:applicableLegislation ;
-    sh:description "The legislation that mandates the creation or management of the Distribution." ;
-    sh:nodeKind sh:IRI ;
-    sh:minCount 1 ;
-  ], [
-    sh:path dcatap:availability ;
-    sh:description "An indication how long it is planned to keep the Distribution of the Dataset available." ;
-    sh:nodeKind sh:BlankNodeOrIRI ;
-    sh:class skos:Concept ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:conformsTo ;
-    sh:description "An established schema to which the described Distribution conforms." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:description ;
-    sh:description "A free-text account of the Distribution." ;
-    sh:nodeKind sh:Literal ;
-  ], [
-    sh:path dct:format ;
-    sh:description "The file format of the Distribution." ;
-    sh:nodeKind sh:IRI ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:issued ;
-    sh:description "The date of formal issuance (e.g., publication) of the Distribution." ;
-    sh:datatype xsd:dateTime ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:language ;
-    sh:description "A language used in the Distribution." ;
-    sh:nodeKind sh:IRI ;
-  ], [
-    sh:path dct:license ;
-    sh:description "A licence under which the Distribution is made available." ;
-    sh:nodeKind sh:IRI ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:modified ;
-    sh:description "The most recent date on which the Distribution was changed or modified." ;
-    sh:datatype xsd:dateTime ;
-    sh:maxCount 1 ;
-  ], [
-    sh:path dct:title ;
-    sh:description "A name given to the Distribution." ;
-    sh:nodeKind sh:Literal ;
-  ], [
-    sh:path dct:rights ;
-    sh:description "A statement that specifies rights associated with the Distribution." ;
-    sh:node :RightsStatement_Shape ;
-  ], [
-    sh:path foaf:page ;
-    sh:description "A page or document about this Distribution." ;
-    sh:nodeKind sh:BlankNodeOrIRI ;
-    sh:class foaf:Document ;
-  ] .
+<http://data.gdi.eu/core/p2/DatasetShape#description> sh:path dct:description;
+  sh:name "description"@en;
+  sh:description "A free-text account of the Dataset."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#distribution> sh:path dcat:distribution;
+  sh:name "distribution"@en;
+  sh:description "An available Distribution for the Dataset."@en;
+  sh:nodeKind sh:IRI .
+
+<http://data.gdi.eu/core/p2/DatasetShape#hdab> sh:path healthdcatap:hdab;
+  sh:name "hdab"@en;
+  sh:description "Health Data Access Body supporting access to data in the Member State."@en;
+  sh:node gdi:AgentHdabShape;
+  dash:viewer dash:DetailsViewer;
+  dash:editor dash:BlankNodeEditor .
+
+gdi:HealthCategoryHumanGenetic a skos:Concept;
+  skos:prefLabel "Human genetic data"@en .
+
+gdi:HealthCategoryHumanEpigenomic a skos:Concept;
+  skos:prefLabel "Human epigenomic data"@en .
+
+gdi:HealthCategoryHumanGenomic a skos:Concept;
+  skos:prefLabel "Human genomic data"@en .
+
+<http://data.gdi.eu/core/p2/DatasetShape#health-catagory> sh:path healthdcatap:healthCatagory;
+  sh:name "health catagory"@en;
+  sh:description "A category of the Dataset or tag describing the Dataset."@en;
+  sh:nodeKind sh:IRI;
+  sh:minCount 1;
+  sh:in ( gdi:HealthCategoryHumanGenetic gdi:HealthCategoryHumanEpigenomic gdi:HealthCategoryHumanGenomic );
+  dash:viewer dash:URIViewer;
+  dash:editor dash:MultiSelectEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#identifier> sh:path dct:identifier;
+  sh:name "identifier"@en;
+  sh:description "The main identifier for the Dataset, e.g. the URI or other unique identifier in the context of the Catalogue."@en;
+  sh:minCount 1;
+  sh:datatype xsd:string;
+  sh:nodeKind sh:Literal;
+  sh:pattern "^(GOE|GDI)-[A-Z]{2}-[0-9]+$";
+  sh:message "Use GOE-CC-NNN… or GDI-CC-NNN… (CC = two-letter country code, NNN… = digits)."@en;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#other-identifier> sh:path adms:identifier;
+  sh:name "other identifier"@en;
+  sh:description "A secondary identifier of the Dataset, such as MAST/ADS17, DataCite18, DOI19, EZID20 or W3ID21"@en;
+  sh:node gdi:IdentifierShape;
+  dash:viewer dash:DetailsViewer;
+  dash:editor dash:BlankNodeEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#is-referenced-by> sh:path dct:isReferencedBy;
+  sh:name "is referenced by"@en;
+  sh:description "A related resource, such as a publication, that references, cites, or otherwise points to the dataset."@en;
+  sh:nodeKind sh:IRI;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#legal-basis> sh:path dpv:hasLegalBasis;
+  sh:name "legal basis"@en;
+  sh:description "The legal basis used to justify processing of personal data. The legal basis can be provided as a value from the dpv taxonomy and should be provided via IRI, for example https://w3id.org/dpv#Consent"@en;
+  sh:nodeKind sh:IRI;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#number-of-records> sh:path healthdcatap:numberOfRecords;
+  sh:name "number of records"@en;
+  sh:description "Size of the dataset in terms of the number of records"@en;
+  sh:nodeKind sh:Literal;
+  sh:datatype xsd:nonNegativeInteger;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#number-of-unique-individuals> sh:path
+    healthdcatap:numberOfUniqueIndividuals;
+  sh:name "number of unique individuals"@en;
+  sh:description "Number of records for unique individuals."@en;
+  sh:nodeKind sh:Literal;
+  sh:datatype xsd:nonNegativeInteger;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#theme> sh:path dcat:theme;
+  sh:name "theme"@en;
+  sh:description "A category of the Dataset. This property must be filled with a value from a controlled vocabulary. The default value of this property is http://publications.europa.eu/resource/authority/data-theme/HEAL from the controlled vocabulary."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:IRI;
+  sh:defaultValue <http://publications.europa.eu/resource/authority/data-theme/HEAL>;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#title> sh:path dct:title;
+  sh:name "title"@en;
+  sh:description "A name given to the Dataset."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
+
+<http://data.gdi.eu/core/p2/DatasetShape#type> sh:path dct:type;
+  sh:name "type"@en;
+  sh:description "A type of the Dataset.This property must be filled with a value from a controlled vocabulary."@en;
+  sh:nodeKind sh:IRI;
+  dash:viewer dash:URIViewer;
+  sh:in ( type:SYNTHETIC_DATA );
+  dash:editor dash:EnumSelectEditor .
+
+
+# The following content comes from:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/AgentCreator.ttl
+
+# SPDX-FileCopyrightText: 2025 Health-RI
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix example: <https://data.sparna.fr/shapes-example/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix gdi: <http://data.gdi.eu/core/p2/> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+gdi:AgentCreatorShapeAgentCreatorShape a owl:Ontology;
+  rdfs:label "Agent class"@en;
+  rdfs:comment "Excel template for Agent class"@en;
+  dct:description "This is a SHACL shape for the creator Agent for GDI v1.1"@en;
+  owl:versionInfo "0.1";
+  dct:modified "2025-12-22T00:00:00.000Z"^^xsd:dateTime .
+
+gdi:AgentCreatorShape a sh:NodeShape;
+  rdfs:label "Agent Creator"@en;
+  sh:targetClass foaf:Agent;
+  sh:property <http://data.gdi.eu/core/p2/AgentCreatorShape#foaf:name>.
+
+<http://data.gdi.eu/core/p2/AgentCreatorShape#foaf:name> sh:path foaf:name;
+  sh:name "name"@en;
+  sh:description "A name of the agent."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextAreaEditor .
+
+
+# The following content comes from:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/AgentHdab.ttl
+
+# SPDX-FileCopyrightText: 2025 Health-RI
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix example: <https://data.sparna.fr/shapes-example/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix gdi: <http://data.gdi.eu/core/p2/> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+gdi:AgentHdabShapeAgentHdabShape a owl:Ontology;
+  rdfs:label "Agent class"@en;
+  rdfs:comment "Excel template for Agent class"@en;
+  dct:description "This is a SHACL shape for the HDAB Agent for GDI v1.1"@en;
+  owl:versionInfo "0.1";
+  dct:modified "2025-12-22T00:00:00.000Z"^^xsd:dateTime .
+
+gdi:AgentHdabShape a sh:NodeShape;
+  rdfs:label "Agent"@en;
+  sh:targetClass foaf:Agent;
+  sh:property <http://data.gdi.eu/core/p2/AgentHdabShape#contact-point>, <http://data.gdi.eu/core/p2/AgentHdabShape#foaf:name>.
+
+<http://data.gdi.eu/core/p2/AgentHdabShape#contact-point> sh:path dcat:contactPoint;
+  sh:name "contact point"@en;
+  sh:description "Contact information that can be used to contact the Agent."@en;
+  sh:node gdi:KindShape;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:BlankNodeEditor .
+
+<http://data.gdi.eu/core/p2/AgentHdabShape#foaf:name> sh:path foaf:name;
+  sh:name "name"@en;
+  sh:description "A name of the agent."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextAreaEditor .
+
+
+# The following content comes from:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/Kind.ttl
+
+# SPDX-FileCopyrightText: 2025 Health-RI
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix example: <https://data.sparna.fr/shapes-example/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix gdi: <http://data.gdi.eu/core/p2/> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+gdi:KindShapeKindShape a owl:Ontology;
+  rdfs:label "Kind"@en;
+  rdfs:comment "Health-RI v2 Kind."@en;
+  dct:description "SHACL mandatory definitions for the Health-RI v2 model for vcard:Kind."@en;
+  owl:versionInfo "0.1";
+  dct:modified "2025-12-22T14:35:17.460Z"^^xsd:dateTime .
+
+gdi:KindShape a sh:NodeShape;
+  rdfs:label "Kind"@en;
+  sh:targetClass vcard:Kind;
+  sh:property <http://data.gdi.eu/core/p2/KindShape#vcard:hasURL>, <http://data.gdi.eu/core/p2/KindShape#vcard:hasEmail>,
+    <http://data.gdi.eu/core/p2/KindShape#vcard:fn> .
+
+<http://data.gdi.eu/core/p2/KindShape#vcard:hasURL> sh:path vcard:hasURL;
+  sh:name "contact page"@en;
+  sh:description "A webpage that either allows to make contact (i.e. a webform) or the information contains how to get into contact."@en;
+  sh:nodeKind sh:IRI;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/KindShape#vcard:hasEmail> sh:path vcard:hasEmail;
+  sh:name "has email"@en;
+  sh:description "A email address via which contact can be made. Make sure you use the correct format, starting with 'mailto:'. For example: mailto:info@example.com"@en;
+  sh:minCount 1;
+  sh:maxCount 1;
+  sh:nodeKind sh:IRI;
+  sh:pattern "^mailto:.+@.+\\..+$";
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/KindShape#vcard:fn> sh:path vcard:fn;
+  sh:name "formatted name"@en;
+  sh:description "The full name of the contact point."@en;
+  sh:minCount 1;
+  sh:maxCount 1;
+  sh:nodeKind sh:Literal;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextAreaEditor .
+
+
+# The following content comes from:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/5578eeaccb70cc164dccfef2faf957e060e29b80/Formulasation(shacl)/core/PiecesShape/Identifier.ttl
+
+# SPDX-FileCopyrightText: 2025 Health-RI
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix gdi: <http://data.gdi.eu/core/p2/> .
+@prefix adms: <http://www.w3.org/ns/adms#> .
+@prefix dash: <http://datashapes.org/dash#> .
+
+gdi:aux-IdentifierShape a owl:Ontology;
+  rdfs:label "Identifier"@en;
+  rdfs:comment "Health-RI v2 Identifier"@en;
+  dct:description "SHACL definitions for GDI v1.1 model for Identifier."@en;
+  owl:versionInfo "0.1";
+  dct:modified "2025-12-22T14:03:03.240Z"^^xsd:dateTime .
+
+gdi:IdentifierShape a sh:NodeShape;
+  rdfs:label "Identifier"@en;
+  sh:targetClass adms:Identifier;
+  sh:property <http://data.gdi.eu/core/p2/IdentifierShape#skos:notation>, <http://data.gdi.eu/core/p2/IdentifierShape#adms:schemaAgency>, <http://data.gdi.eu/core/p2/IdentifierShape#foaf:name> .
+
+<http://data.gdi.eu/core/p2/IdentifierShape#skos:notation> sh:path skos:notation;
+  sh:name "notation"@en;
+  sh:description "A string that is an identifier in the context of the identifier scheme referenced by its datatype."@en;
+  sh:minCount 1;
+  sh:maxCount 1;
+  sh:nodeKind sh:Literal;
+  sh:datatype xsd:string;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
+
+<http://data.gdi.eu/core/p2/IdentifierShape#adms:schemaAgency> sh:path adms:schemaAgency;
+  sh:name "schema agency"@en;
+  sh:description "The name of the agency that issued the identifier."@en;
+  sh:nodeKind sh:Literal;
+  sh:datatype xsd:string;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
+
+<http://data.gdi.eu/core/p2/IdentifierShape#foaf:name> sh:path foaf:name;
+  sh:name "name"@en;
+  sh:description "A name of the agent."@en;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextAreaEditor .
+
+
+# The following content comes from:
+# https://github.com/GenomicDataInfrastructure/gdi-metadata/blob/dee59b91dd32c1a33f6a7fc9e8ef452c235a997a/Formulasation(shacl)/core/PiecesShape/Distribution.ttl
+
+# SPDX-FileCopyrightText: 2025 Health-RI
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+@prefix spdx: <http://spdx.org/rdf/terms#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix healthdcatap: <http://healthdataportal.eu/ns/health#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix gdi: <http://data.gdi.eu/core/p2/> .
+@prefix adms: <http://www.w3.org/ns/adms#> .
+@prefix dcatap: <http://data.europa.eu/r5r/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix status: <http://publications.europa.eu/resource/authority/distribution-status/> .
+
+<https://data.sparna.fr/shapes-example#> a owl:Ontology;
+  rdfs:label "Distribution"@en;
+  rdfs:comment "GDI v1.1 Distribution."@en;
+  dct:description "SHACL definitions for the GDI v1.1 model for Distribution."@en;
+  owl:versionInfo "0.1";
+  dct:modified "2025-12-22T09:23:35.310Z"^^xsd:dateTime .
+
+gdi:DistributionShape a sh:NodeShape;
+  rdfs:label "Distribution"@en;
+  sh:targetClass dcat:Distribution;
+  sh:property <http://data.gdi.eu/core/p2/DistributionShape#dcat:accessURL>,
+    <http://data.gdi.eu/core/p2/DistributionShape#dcatap:applicableLegislation>,
+    <http://data.gdi.eu/core/p2/DistributionShape#dcat:accessService>,
+    <http://data.gdi.eu/core/p2/DistributionShape#dct:title> .
+
+<http://data.gdi.eu/core/p2/DistributionShape#dcat:accessService> sh:path dcat:accessService;
+  sh:name "access service"@en;
+  sh:class dcat:DataService .
+
+<http://data.gdi.eu/core/p2/DistributionShape#dcat:accessURL> sh:path dcat:accessURL;
+  sh:name "access url"@en;
+  sh:description "The resource at the access URL may contain information about how to get the Dataset."@en;
+  sh:minCount 1;
+  sh:nodeKind sh:IRI;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/DistributionShape#dcatap:applicableLegislation>
+  sh:path dcatap:applicableLegislation;
+  sh:name "Applicable Legislation"@en;
+  sh:minCount 1;
+  sh:nodeKind sh:IRI;
+  sh:defaultValue <http://data.europa.eu/eli/reg/2025/327/oj>;
+  dash:viewer dash:URIViewer;
+  dash:editor dash:URIEditor .
+
+<http://data.gdi.eu/core/p2/DistributionShape#dct:title> sh:path dct:title;
+  sh:name "title"@en;
+  sh:minCount 1;
+  sh:description "This property can be repeated for parallel language versions of the title."@en;
+  sh:nodeKind sh:Literal;
+  sh:uniqueLang true;
+  dash:viewer dash:LiteralViewer;
+  dash:editor dash:TextFieldEditor .
