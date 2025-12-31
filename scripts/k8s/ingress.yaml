@@ -1,0 +1,51 @@
+# Please modify this according to your needs. This is not a final specification.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gdi-mini-node-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /beacon/aggregated/v2
+            pathType: Prefix
+            backend:
+              service:
+                name: gdi-mini-node-service
+                port:
+                  name: http
+          - path: /beacon/sensitive/v2
+            pathType: Prefix
+            backend:
+              service:
+                name: gdi-mini-node-service
+                port:
+                  name: http
+          - path: /fairdp
+            pathType: Prefix
+            backend:
+              service:
+                name: gdi-mini-node-service
+                port:
+                  name: http
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: gdi-mini-node-service
+                port:
+                  name: http
+          - path: /
+            pathType: Exact
+            backend:
+              service:
+                name: gdi-mini-node-service
+                port:
+                  name: http
+
+#      host: gdi.example.org
+#  tls:
+#    - secretName: gdi-example-org
+#      hosts:
+#        - gdi.example.org

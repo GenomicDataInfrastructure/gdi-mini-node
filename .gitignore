@@ -2,3 +2,4 @@
 /.venv
 /*.parquet
 /request.json
+/scripts/k8s/config/*.yaml
