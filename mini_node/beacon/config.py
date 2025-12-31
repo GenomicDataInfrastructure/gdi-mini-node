@@ -16,7 +16,6 @@ class BeaconInfoConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
     id: str
     name: str
-    version: str
     environment: BeaconEnvironment
     description: str | None = None
     alternativeUrl: HttpUrl | None = None

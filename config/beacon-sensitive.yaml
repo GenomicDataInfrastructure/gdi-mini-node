@@ -4,7 +4,6 @@ base_path: /beacon/sensitive/v2
 info:
   id: org.example.sensitive.beacon.v2
   name: GDI Sensitive Beacon API
-  version: v0.9.0
   environment: dev  # choices: dev, test, staging, prod
 
   # The following are all OPTIONAL:

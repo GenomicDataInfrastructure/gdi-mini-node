@@ -1,15 +1,11 @@
 name: Docker Image
 
-# This workflow runs automatically when
-# - a commit is made to the main branch, or
-# - a tag is pushed.
+# This workflow runs automatically when a tag is pushed.
 # Alternatively, the workflow can be manually triggerred on GitHub (UI).
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
     tags:
       - "*"
 
@@ -47,7 +43,7 @@ jobs:
           # (type=sha rule has lower priority than type=ref.)
           tags: |
             type=semver,event=tag,pattern={{version}}
-            type=sha,event=branch,prefix=${{ github.ref_name }}-,format=short
+            type=sha,event=workflow_dispatch,prefix=${{ github.ref_name }}-,format=short
       - name: Build and push the Docker image
         uses: docker/build-push-action@v6
         with:
