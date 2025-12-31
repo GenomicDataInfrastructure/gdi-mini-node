@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gdi-mini-node-deployment
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gdi-mini-node
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gdi-mini-node
+
+    spec:
+      volumes:
+        - name: empty-dir
+          emptyDir:
+            sizeLimit: 10Gi
+        - name: gdi-mini-node-config
+          configMap:
+            name: gdi-mini-node-configmap
+
+      containers:
+        - name: app
+          image: ghcr.io/genomicdatainfrastructure/gdi-mini-node:0.9.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          volumeMounts:
+            - name: gdi-mini-node-config
+              mountPath: /app/config
+            - name: empty-dir
+              mountPath: /app/data
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 400Mi
+            limits:
+              cpu: 500m
+              memory: 900Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65534 # nobody
+            runAsGroup: 65534 # nogroup
+            capabilities:
+              drop: [ "ALL" ]
+            seccompProfile:
+              type: RuntimeDefault
+
+          startupProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 600
+            timeoutSeconds: 3
+            failureThreshold: 3
