@@ -4,7 +4,6 @@ base_path: /beacon/aggregated/v2
 info:
   id: org.example.aggregated.beacon.v2
   name: GDI Aggregated Beacon API
-  version: v0.9.0
   environment: dev  # choices: dev, test, staging, prod
 
   # The following are all OPTIONAL:

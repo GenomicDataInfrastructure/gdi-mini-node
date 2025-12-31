@@ -35,7 +35,7 @@ from .model.framework.service_info import (
     BeaconServiceInfoOrganization,
 )
 from ..oidc import OidcVerifier
-from ..setup import encode_basic_credential
+from ..setup import app_version, encode_basic_credential
 
 """Here are the prepared responses for the Beacon Framework API."""
 
@@ -63,7 +63,7 @@ def create_beacon_info(context: BeaconContext, base_url: str) -> BeaconInfo:
             logoUrl=organisation.logoUrl,
         ),
         description=info.description,
-        version=info.version,
+        version=f"v{app_version}",
         welcomeUrl=base_path,
         alternativeUrl=info.alternativeUrl,
         createDateTime=info.createdAt,
@@ -95,7 +95,7 @@ def create_service_info(context: BeaconContext) -> ServiceInfo:
         createdAt=info.createdAt,
         updatedAt=info.updatedAt,
         environment=info.environment,
-        version=info.version,
+        version=f"v{app_version}",
     )
 
 

@@ -215,8 +215,8 @@ class S3DataSync:
                                 if local_path.exists():
                                     self._remove_file(local_path)
 
-            except S3Error as exc:
+            except Exception as exc:
                 _log.error("S3 event-listener error: %s", exc)
-                time.sleep(2)
+                time.sleep(60)
 
         _log.info("S3 event observer stopped")
