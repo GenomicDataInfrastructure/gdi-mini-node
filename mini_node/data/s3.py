@@ -2,13 +2,14 @@ import hashlib
 import logging
 import threading
 import time
+from _thread import interrupt_main
 from pathlib import Path
 from typing import Set
+from sys import exit
 from urllib.parse import urlparse
 
 from iterators import TimeoutIterator
 from minio import Minio
-from minio.error import S3Error
 
 from mini_node.data.fs import RegistryUpdater
 from mini_node.data.registry import DataRegistry
@@ -58,7 +59,6 @@ class S3DataSync:
 
         path_parts = parsed.path.lstrip("/").split("/", 1)
         self._bucket = path_parts[0]
-        self._suffix = s3_sync_config.path_suffix
         self._prefix = path_parts[1].lstrip("/") if len(path_parts) > 1 else ""
 
         if self._prefix and not self._prefix.endswith("/"):
@@ -79,6 +79,10 @@ class S3DataSync:
     def _local_path_for_object(self, obj_name: str) -> Path:
         item_path = obj_name[len(self._prefix):] if self._prefix else obj_name
         return self._data_dir / item_path
+
+    @staticmethod
+    def _has_right_extension(path: str) -> bool:
+        return path.endswith(".parquet") or path.endswith("/metadata.yaml")
 
     @staticmethod
     def _md5sum(path: Path) -> str:
@@ -121,40 +125,57 @@ class S3DataSync:
             self._data_dir,
         )
 
-        seen_local_paths: Set[Path] = set()
-
         objects = self.client.list_objects(
             self._bucket,
             prefix=self._prefix,
             recursive=True,
         )
 
-        for obj in objects:
-            local_path = self._local_path_for_object(obj.object_name)
-            seen_local_paths.add(local_path)
+        try:
+            seen_local_paths: Set[Path] = set()
+            for obj in objects:
+                if not self._has_right_extension(obj.object_name):
+                    _log.debug(
+                        "Ignoring S3 path due to its extension: %s",
+                        obj.object_name,
+                    )
+                    continue
+                local_path = self._sync_object_to_local(obj)
+                seen_local_paths.add(local_path)
+            self._remove_stale_files(seen_local_paths)
+            _log.info("Full sync completed")
+        except Exception as e:
+            _log.error("Data sync from the S3 storage failed: %s", e)
+            interrupt_main()
+            exit(1)
 
-            local_path.parent.mkdir(parents=True, exist_ok=True)
-            needs_download = True
+    def _sync_object_to_local(self, obj) -> Path:
+        local_path = self._local_path_for_object(obj.object_name)
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        needs_download = True
 
-            if local_path.exists():
-                if local_path.stat().st_size == obj.size:
-                    if obj.etag and "-" not in obj.etag:
-                        local_md5 = self._md5sum(local_path)
-                        if local_md5 == obj.etag:
-                            needs_download = False
-                    else:
-                        _log.warning(
-                            "Multipart ETag [%s] for [%s], skipping MD5 check",
-                            obj.etag, obj.object_name,
-                        )
+        if local_path.exists():
+            if local_path.stat().st_size == obj.size:
+                if obj.etag and "-" not in obj.etag:
+                    local_md5 = self._md5sum(local_path)
+                    if local_md5 == obj.etag:
                         needs_download = False
+                else:
+                    _log.warning(
+                        "Multipart ETag [%s] for [%s], skipping MD5 check",
+                        obj.etag, obj.object_name,
+                    )
+                    needs_download = False
 
-            if needs_download:
-                self._download_file(local_path, obj.object_name)
+        if needs_download:
+            self._download_file(local_path, obj.object_name)
 
+        return local_path
+
+    def _remove_stale_files(self, active_file_paths: set[str]):
         # Remove stale local files
         for path in self._data_dir.rglob("*"):
-            if path.is_file() and path not in seen_local_paths:
+            if path.is_file() and path not in active_file_paths:
                 _log.info("Deleting local file [%s] (not present in S3)", path)
                 self._remove_file(path)
 
@@ -162,8 +183,6 @@ class S3DataSync:
         for path in sorted(self._data_dir.rglob("*"), reverse=True):
             if path.is_dir() and not any(path.iterdir()):
                 path.rmdir()
-
-        _log.info("Full sync completed")
 
     # ------------------------------------------------------------------ #
     # Observe logic
@@ -186,7 +205,6 @@ class S3DataSync:
                 with self.client.listen_bucket_notification(
                         self._bucket,
                         prefix=self._prefix,
-                        suffix=self._suffix,
                         events=("s3:ObjectCreated:*", "s3:ObjectRemoved:*"),
                 ) as events:
                     it = TimeoutIterator(events, timeout=1.5)
@@ -202,6 +220,11 @@ class S3DataSync:
                         for record in event.get("Records", []):
                             event_name = record["eventName"]
                             obj = record["s3"]["object"]["key"]
+
+                            if not self._has_right_extension(obj):
+                                _log.debug("Ignoring S3 path due to its extension: %s", obj)
+                                continue
+
                             local_path = self._local_path_for_object(obj)
 
                             if event_name.startswith("s3:ObjectCreated"):

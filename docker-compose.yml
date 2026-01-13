@@ -7,4 +7,23 @@ services:
       - "127.0.0.1:8080:8000"
     volumes:
       - ./config:/app/config:ro
+      # Don't use this volume when S3 data-sync is enabled:
       - ./data:/app/data:ro
+
+  minis3:
+    container_name: minis3
+    image: minio/minio:latest
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    command: server /data --console-address ":9001"
+
+  minis3-setup:
+    container_name: minis3-setup
+    image: minio/mc:latest
+    volumes:
+      - ./data:/data:ro
+      - ./scripts/minio-setup.sh:/minio-setup.sh:ro
+    entrypoint: sh /minio-setup.sh
+    depends_on:
+      - minis3

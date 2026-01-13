@@ -21,8 +21,6 @@ sync_from_s3:
   # The bucket name is specified after the hostname.
   # Directory path to monitor can be specified after the bucket name.
   # The directory path will be omitted from the downloaded file.
-  url: https://s3.example.org/bucket/datasets/
+  url: http://minis3:9000/mini-data/demo
   access_key:
   secret_key:
-  # The path-suffix used for pre-filtering S3 files:
-  path_suffix: .parquet

@@ -28,7 +28,6 @@ class S3StorageConfig(BaseModel):
     access_key: str | None = None
     secret_key: str | None = None
     region: str = "us-east-1"
-    path_suffix: str = ".parquet"
 
     def is_enabled(self) -> bool:
         return self.url is not None \

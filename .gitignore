@@ -1,5 +1,8 @@
 /.idea
+/.vscode
 /.venv
 /*.parquet
 /request.json
 /scripts/k8s/config/*.yaml
+
+__pycache__
