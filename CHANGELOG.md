@@ -17,6 +17,8 @@ Releases and associated Docker images are published on
 
 ### Fixed
 
+- Data-sync from S3 storage was not tracking metadata.yaml files (#21)
+
 
 ## 0.9.0
 
