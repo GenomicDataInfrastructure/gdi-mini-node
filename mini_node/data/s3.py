@@ -134,14 +134,14 @@ class S3DataSync:
         try:
             seen_local_paths: Set[Path] = set()
             for obj in objects:
-                if not self._has_right_extension(obj.object_name):
+                if self._has_right_extension(obj.object_name):
+                    local_path = self._sync_object_to_local(obj)
+                    seen_local_paths.add(local_path)
+                else:
                     _log.debug(
                         "Ignoring S3 path due to its extension: %s",
                         obj.object_name,
                     )
-                    continue
-                local_path = self._sync_object_to_local(obj)
-                seen_local_paths.add(local_path)
             self._remove_stale_files(seen_local_paths)
             _log.info("Full sync completed")
         except Exception as e:
@@ -222,7 +222,10 @@ class S3DataSync:
                             obj = record["s3"]["object"]["key"]
 
                             if not self._has_right_extension(obj):
-                                _log.debug("Ignoring S3 path due to its extension: %s", obj)
+                                _log.debug(
+                                    "Ignoring S3 path due to its extension: %s",
+                                    obj,
+                                )
                                 continue
 
                             local_path = self._local_path_for_object(obj)
