@@ -1,7 +1,12 @@
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FGenomicDataInfrastructure%2Fgdi-mini-node%2Fmain%2Fpyproject.toml)
+![GitHub Release](https://img.shields.io/github/v/release/GenomicDataInfrastructure/gdi-mini-node)
+![GitHub License](https://img.shields.io/github/license/GenomicDataInfrastructure/gdi-mini-node)
+
+
 GDI MINI-NODE
 =============
 
-This is a minimal single-app solution to run GDI Node services.
+This is a minimal single-app solution to run **GDI node** services.
 
 This application covers following GDI APIs:
 - FAIR Data Point
@@ -97,7 +102,7 @@ comply with the expectations from the GDI User Portal. First of all, the Beacon
 specification specifies framework endpoints (all using the `GET` method):
 
 * `/` and `/info` – JSON describing the Beacon;
-* `/service-info` – another JSON that follows the GA€GH Service Info spec;
+* `/service-info` – another JSON that follows the GA4GH Service Info spec;
 * `/map` – JSON describing available endpoints;
 * `/configuration` – JSON describing entry-types, maturity, and security;
 * `/entry_types` – JSON describing entry-types;
@@ -113,8 +118,9 @@ query for the number of matching individuals:
 
 This implementation closely aligns with the
 [client code](https://github.com/GenomicDataInfrastructure/gdi-userportal-dataset-discovery-service/blob/5dbf3403bd9751b4c91bb90f9a417c6201b6027f/src/main/java/io/github/genomicdatainfrastructure/discovery/datasets/infrastructure/beacon/persistence/BeaconDatasetIdsCollector.java#L46),
-meanwhile it does not actually return any records (which are not used by the
-client).
+and returns the count of individuals that match the variant, sex, and age-range.
+Meanwhile it does not return detailed records about individuals (which are not
+used by the client).
 
 Additional endpoints for the aggregated-data Beacon are used by the GDI User
 Portal to find available cohorts from datasets and allele-frequencies for a
@@ -125,24 +131,26 @@ variant:
 
 Also in here, this application closely aligns with the
 [client code](https://github.com/GenomicDataInfrastructure/gdi-userportal-dataset-discovery-service/blob/5dbf3403bd9751b4c91bb90f9a417c6201b6027f/src/main/java/io/github/genomicdatainfrastructure/discovery/datasets/infrastructure/beacon/persistence/GVariantsRepository.java#L39),
-and just returns the JSON properties actually used by the client.
+and just returns the JSON properties actually used by the client (the response
+contains less information than exposed with standard Beacons).
 
 In summary, this implementation aims for minimal data as requested by the GDI
 User Portal, and does not implement the standard Beacon data model. The benefit
-is the smaller footprint of the data required for the service. And in this case,
-the service relies on [Parquet](https://parquet.apache.org) files stored under
+is the smaller footprint of the data required for the service.
+
+The service relies on [Parquet](https://parquet.apache.org) files stored under
 `./data/{datasetId}/{assemblyId}/`, where `assemblyId` is restricted to `GRCh37`
 and `GRCh38` (indicates the reference genome that was used for the source VCF
 file). These Parquet files are essentially tables that the software uses for
 retrieving data for the Beacon responses:
 
 1. input request specifies values for: assembly, chromosome, position,
-   reference, alternative, variant type (e.g. `SNP`);
+   reference, alternative, variant type (default: `SNP`);
 2. the system distinguishes files (paths stored in memory) first by assembly,
    then `chr{CHR}.{GROUP}` string where `GROUP` is an integer obtained from
-   integer-division `position // 1_000_000` to indicate position-range;
+   integer-division `position // 10_000_000` to indicate position-range;
 3. next, the system reads the list of matching files (one per dataset) by going
-   to the matching line (POS-REF-ALT-VARIANT_TYPE), and reading response data
+   to the matching line (REF-ALT-VARIANT_TYPE), and reading response data
    from additional columns;
 4. finally, the system composes a Beacon-specific JSON response from the
    collected results.
@@ -170,7 +178,7 @@ Beacon configuration is specified in following files:
   authentication requirements; 
 
 Regarding user-authentication, the Beacon endpoints are public by default.
-However, it is possible to activate user authorisation using service-specific
+However, it is possible to activate user authorisation in service-specific
 configuration files:
 
 * Basic-authentication – it's possible to define one or more user-credentials.
@@ -194,10 +202,11 @@ always required, and is used for configuring general app features:
 
 Regarding the latter, this mini-node software can be deployed as an independent
 public GDI Node API that downloads its data from an S3 bucket. This approach
-enables data-production from other systems, as well as S3 file history. Whether
-to combine the deployed mini-node software with a persistent volume, is left to
-the deployers to decide. The volume may reduce network traffic, especially on
-restarts, but on the other hand it duplicates the required disk space.
+enables dataset-production from other systems, as well as S3 file history.
+
+Whether to combine the deployed mini-node software with a persistent volume on
+Kubernetes, is left to the deployers to decide. A persistent volume may reduce
+network traffic between the app and its S3 storage, especially on restarts.
 
 
 Getting Started
@@ -224,9 +233,13 @@ poetry install
 poetry run fastapi --port 8080 dev mini_node
 ```
 
-The GitHub repo also includes a public Docker image under the packages.
+The GitHub repo also includes a **public Docker image** under the
+[packages](https://github.com/orgs/GenomicDataInfrastructure/packages?repo_name=gdi-mini-node).
+Sample scripts for deploying on **Kubernetes** can be found
+[here](./scripts/k8s/).
 
 Notes about the Docker image:
+* the HTTP interface is exposed at port 8000;
 * it runs as a user without any permissions (`nobody:nogroup` or `65534:65534`);
 * it does not need to write to its image, so it can run read-only;
 * it requires 150 MB of RAM at minimum; ensure at least 500 MB.
@@ -262,7 +275,7 @@ For aggregated Beacon, the files are named with this pattern:
 The software uses these files to support User Portal allele frequency search for
 a specific variant (within given assembly).
 
-For sensitive Beacon, the files have name with this pattern:
+For sensitive Beacon, the files have names with this pattern:
 `individuals-chr{1-22,X,Y,M}.{0,1,2,3,...}.parquet`, and they contain columns:
 
 1. `POS` (int32) - VCF position - 1;
@@ -289,6 +302,8 @@ Therefore, to register a new dataset:
 1. Create a new directory **under the data directory**.
    * The directory name will be used as DATASET ID.
    * This software does not enforce any convention for IDs – it's up to you.
+   * Please refer to the GDI Metadata model to learn more about the dataset ID
+     convention.
 2. Copy an existing **metadata.yaml** into the new directory.
    * Review and update the YAML file.
    * `catalog_id` will affect in which [catalogue](./config/fdp.yaml) the
@@ -299,9 +314,12 @@ Therefore, to register a new dataset:
    * Technically, a dataset can have both reference genome directories, too.
 4. Create Parquet files for the dataset to be discoverable through a Beacon.
    * Details about running the script are given below.
+5. The software automatically registers the files of the new dataset.
+6. You can visit the default page (root-path) of the running mini-node app to
+   view information about the currently available datasets
 
 **NOTE**: if you enable S3 data-syncing in the mini-node configuration, you
-would  create the dataset directory with the content on a computer/server where
+would create the dataset directory with the content on a computer/server where
 you have the input VCF files and Python script for generating the Parquet files.
 Once the directory is ready, you would upload it to the S3 bucket where the
 mini-node instance automatically detects and downloads them. Of course, this
@@ -409,7 +427,8 @@ poetry run python3 parquet-writer individuals
   `data/DATASET_ID/GRCH37/`). Without it, the destination defaults to current
   directory.
 * `-i` flag is used to specify the input CSV about individuals; this file is
-  mandatory; using semi-comma as the field-value separator is recommended.
+  mandatory; using semi-comma as the field-value separator is recommended; for
+  testing, you can activate random values using `-i RANDOM`.
 * There can be many VCF files as long as their chromosome-position pairs don't
   overlap. The script processes multiple files in parallel.
 * Depending on the size of the VCF files, the process may take tens of minutes
@@ -425,3 +444,6 @@ age), these can be obtained using this command:
 ```shell
 poetry run python3 parquet-writer summary -i /some/dir/individuals.parquet
 ```
+
+Instructions about testing the Beacon API (for matching the data in the Parquet
+files) are provided [here](./data/README.md).
