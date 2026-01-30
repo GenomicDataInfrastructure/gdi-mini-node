@@ -25,7 +25,7 @@ spec:
 
       containers:
         - name: app
-          image: ghcr.io/genomicdatainfrastructure/gdi-mini-node:0.9.0
+          image: ghcr.io/genomicdatainfrastructure/gdi-mini-node:0.9.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

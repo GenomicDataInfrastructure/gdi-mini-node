@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Releases and associated Docker images are published on
-[GitHub](https://github.com/GenomicDataInfrastructure/gdi-mini-node).
+[GitHub](https://github.com/GenomicDataInfrastructure/gdi-mini-node/releases).
 
 
 ## [Unreleased]
@@ -17,7 +17,18 @@ Releases and associated Docker images are published on
 
 ### Fixed
 
+
+## 0.9.1
+
+### Changed
+
+- Updated README documentation
+- Upraged dependency `pyarrow` from 22.0.0 to 23.0.0
+
+### Fixed
+
 - Data-sync from S3 storage was not tracking metadata.yaml files (#21)
+
 
 
 ## 0.9.0

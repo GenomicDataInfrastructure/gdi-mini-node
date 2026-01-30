@@ -2,7 +2,8 @@
 
 The directory with this README-file is the default location for the datasets as
 specified in **config/app.yaml** (`data_dir`). This directory is included in the
-Docker Compose deployment, however, the data is not part of the Docker image.
+[Docker Compose deployment](../docker-compose.yml), however, the data is not
+part of the Docker image.
 
 This directory also contains two sample datasets for a quick start. The sample
 data uses a  section of
@@ -24,15 +25,25 @@ and `AGE` values for each individual. So these will be different with each
 generation.
 
 Beacon request examples below do not cover authentication. If you have
-authentication  enabled, just provide the `Bearer` token to the `AUTHORIZATION`
+authentication  enabled, just provide the `Bearer` token to the `Authorization`
 header. In case of `Basic` authentication, the credentials can be provided as
 `curl -u "username:password" <other-curl-arguments...>`.
+
+
+## Test Script
+
+Although the current document goes into details about the Beacon queries, if you
+just want to quickly verify your Beacon instance, there is also an automated
+version available as shell-script: [test-beacon.sh](../scripts/test-beacon.sh).
+By default, it targets http://localhost:8000/beacon/aggregated/v2 but you can
+override it by providing a custom URL (API root) as an argument to the script.
+
 
 ## General Instructions
 
 The minimal Beacon API does not support GET-requests for data-endpoints, only
 the POST method can be used. Therefore, JSON as the request body is expected.
-For more convenient testing, save the request JSON to file that you refer from
+For more convenient testing, save the request JSON to a file that you refer from
 the command-line. In addition, every request must also send the `Content-Type`
 header to let the server know that the uploaded content is JSON. Therefore, if
 the payload is saved in file `request.json`, the request can be invoked using
@@ -258,7 +269,7 @@ A full example of the request for finding the number of individuals that match
 ALL of the following criteria:
 * males (`sex` = `NCIT:C16576`)
 * age over 80 years (`diseases.ageOfOnset.iso8601duration` `>=` `P80Y`)
-* specific variant (`GRCh38` – `22:40016504T>A` – note that Beacon API uses
+* specific variant (`GRCh37` – `3:45864732T>C` – NOTE that Beacon API uses
   `<position value> - 1`)
 
 ```json
