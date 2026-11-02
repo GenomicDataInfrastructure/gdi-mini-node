@@ -34,6 +34,14 @@ configuration:
     client_id:
     client_secret:
 
+    # Trusted issuers for GA4GH visas in incoming passports. Configure at
+    # least one issuer when enabling OIDC; each JWKS URI is checked against
+    # the issuer's .well-known/oidc-configuration when available:
+    # trusted_visa_issuers:
+    #   - issuer: https://visa.example.org
+    #     jwks_uri: https://visa.example.org/jwks
+    trusted_visa_issuers: []
+
     # [OPTIONAL] Defines the GA4GH Visas that the ga4gh_passport_v1 expected to
     # contain before granting access to the user.
     # All the listed visas must be present. One list item corresponds to the

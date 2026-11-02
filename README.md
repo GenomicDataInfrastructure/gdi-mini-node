@@ -189,6 +189,11 @@ configuration files:
   covered by the GDI User Portal).
 
 
+When OIDC is enabled, configure a non-empty `trusted_visa_issuers` list in
+the Beacon configuration. Each entry contains an `issuer` and its `jwks_uri`;
+incoming GA4GH visa signatures are checked only against those configured
+issuers.
+
 General Configuration
 ---------------------
 

@@ -36,17 +36,29 @@ class BeaconOrganisationConfig(BaseModel):
     logoUrl: str | None = None
 
 
+class BeaconVisaIssuer(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    issuer: str
+    jwks_uri: str
+
+
 class BeaconOidcConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
     issuer: str | None = None
     client_id: str | None = None
     client_secret: str | None = None
     required_visas: list[dict[str, str]] | None = None
+    trusted_visa_issuers: list[BeaconVisaIssuer] | None = None
 
     def is_effective(self) -> bool:
-        return self.issuer is not None and \
-            self.client_id is not None and \
-            self.client_secret is not None
+        if self.issuer is None or self.client_id is None or \
+                self.client_secret is None:
+            return False
+        if not self.trusted_visa_issuers:
+            raise RuntimeError(
+                "OIDC is configured but trusted_visa_issuers is empty")
+        return True
+
 
 class BeaconBasicAuthConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
