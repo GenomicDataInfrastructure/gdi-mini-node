@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 
 from pydantic import AnyUrl, BaseModel, HttpUrl, PositiveInt, UrlConstraints, \
-    ConfigDict
+    ConfigDict, field_validator
 
 from .model.enums import Granularity
 from .model.framework import BeaconEnvironment
@@ -10,6 +10,12 @@ from .model.framework.configuration import ProductionStatus, SecurityLevel
 
 UrlOrEmail = Annotated[
     AnyUrl, UrlConstraints(allowed_schemes=["http", "https", "mailto"])]
+
+
+def _require_https_prefix(value: str | None) -> str | None:
+    if value is not None and not value.startswith("https://"):
+        raise ValueError("must start with 'https://'")
+    return value
 
 
 class BeaconInfoConfig(BaseModel):
@@ -41,6 +47,11 @@ class BeaconVisaIssuer(BaseModel):
     issuer: str
     jwks_uri: str
 
+    @field_validator("issuer", "jwks_uri")
+    @classmethod
+    def validate_https_prefix(cls, value: str) -> str:
+        return _require_https_prefix(value)
+
 
 class BeaconOidcConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -49,6 +60,11 @@ class BeaconOidcConfig(BaseModel):
     client_secret: str | None = None
     required_visas: list[dict[str, str]] | None = None
     trusted_visa_issuers: list[BeaconVisaIssuer] | None = None
+
+    @field_validator("issuer")
+    @classmethod
+    def validate_https_prefix(cls, value: str | None) -> str | None:
+        return _require_https_prefix(value)
 
     def is_effective(self) -> bool:
         if self.issuer is None or self.client_id is None or \

@@ -14,11 +14,6 @@ from mini_node.beacon.config import BeaconVisaIssuer
 
 _log = logging.getLogger(__name__)
 
-_JWKS_REFRESH_INTERVAL = 10 * 60
-_JWKS_KID_REFRESH_INTERVAL = 30
-_JWKS_RETRY_INTERVAL = 30
-
-
 @dataclass
 class _JwksCache:
     uri: str
@@ -64,7 +59,7 @@ class OidcVerifier:
             required_visas: list[dict[str, str]] | None,
             trusted_visa_issuers: list[BeaconVisaIssuer],
     ):
-        self._issuer = issuer.rstrip("/")
+        self._issuer = issuer
         self._client_id = client_id
         self._client_secret = client_secret
         self._required_visas = required_visas
@@ -78,8 +73,11 @@ class OidcVerifier:
         self._trusted_visa_jwks_caches: dict[str, _JwksCache] = {}
 
         # Request sending and retry behavior (unit: seconds)
-        self._request_timeout = 5
+        self._request_timeout = 3
         self._backoff_delay = 10
+        self._jwks_refresh_interval = 15 * 60
+        self._jwks_kid_refresh_interval = 60
+        self._jwks_retry_interval = 30
 
         # For caching JWT (str) validation results
         self._lru = LRUCache(capacity=1000, valid_secs=60)
@@ -165,6 +163,11 @@ class OidcVerifier:
         )
         if claims is None:
             _log.debug("JWT decoding failed against configured OIDC JWKS")
+            self._lru.put(token, False)
+            return False
+
+        if claims.get("iss") != self._issuer:
+            _log.warning("JWT issuer does not match configured OIDC issuer")
             self._lru.put(token, False)
             return False
 
@@ -296,7 +299,7 @@ class OidcVerifier:
             options={
                 "verify_signature": True,
                 "verify_iat": False,
-                "verify_exp": False,
+                "verify_exp": True,
             },
             refresh_keys=lambda: self._get_current_jwks(
                 visa_cache, on_kid_miss=True),
@@ -334,19 +337,20 @@ class OidcVerifier:
             return None
 
         key_id = header.get("kid")
+        if not key_id:
+            return None
         algorithm = header.get("alg")
 
         def candidate_keys(current_keys: list[PyJWK]) -> list[PyJWK]:
             return [
                 key for key in current_keys
                 if key.algorithm_name == algorithm
-                and (key_id is None or key.key_id == key_id)
+                and key.key_id == key_id
             ]
 
         matching_keys = candidate_keys(keys)
         if (
                 not matching_keys
-                and key_id is not None
                 and refresh_keys is not None
         ):
             matching_keys = candidate_keys(refresh_keys())
@@ -372,17 +376,17 @@ class OidcVerifier:
                 if (
                         cache.last_kid_refresh is not None
                         and now - cache.last_kid_refresh
-                        < _JWKS_KID_REFRESH_INTERVAL
+                        < self._jwks_kid_refresh_interval
                 ):
                     return cache.keys
                 cache.last_kid_refresh = now
-            elif now - cache.refreshed_at < _JWKS_REFRESH_INTERVAL:
+            elif now - cache.refreshed_at < self._jwks_refresh_interval:
                 return cache.keys
 
             if (
                     cache.last_refresh_attempt is not None
                     and now - cache.last_refresh_attempt
-                    < _JWKS_RETRY_INTERVAL
+                    < self._jwks_retry_interval
             ):
                 return cache.keys
             cache.last_refresh_attempt = now
@@ -404,7 +408,10 @@ class OidcVerifier:
         _log.info("Fetching JSON from [%s]", url)
         for attempt in range(1, tries + 1):
             try:
-                with httpx.Client(timeout=self._request_timeout) as client:
+                with httpx.Client(
+                        timeout=self._request_timeout,
+                        follow_redirects=False,
+                ) as client:
                     resp = client.get(url)
                 if resp.status_code == 200:
                     return resp.json()
