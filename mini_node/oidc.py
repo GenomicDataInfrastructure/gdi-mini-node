@@ -1,7 +1,9 @@
 import logging
+import threading
 import time
 from collections import OrderedDict
-from typing import Optional, List
+from dataclasses import dataclass, field
+from typing import Callable, List, Optional
 
 import httpx
 import jwt
@@ -11,6 +13,20 @@ from jwt import PyJWK
 from mini_node.beacon.config import BeaconVisaIssuer
 
 _log = logging.getLogger(__name__)
+
+_JWKS_REFRESH_INTERVAL = 10 * 60
+_JWKS_KID_REFRESH_INTERVAL = 30
+_JWKS_RETRY_INTERVAL = 30
+
+
+@dataclass
+class _JwksCache:
+    uri: str
+    keys: list[PyJWK]
+    refreshed_at: float
+    last_refresh_attempt: float | None = None
+    last_kid_refresh: float | None = None
+    lock: threading.Lock = field(default_factory=threading.Lock)
 
 
 class LRUCache:
@@ -57,7 +73,9 @@ class OidcVerifier:
         # Information from the well-known configuration (JSON):
         self._userinfo_endpoint: Optional[str] = None
         self._oidc_jwks: list[PyJWK] = []
+        self._oidc_jwks_cache: _JwksCache | None = None
         self._trusted_visa_keys: dict[str, list[PyJWK]] = {}
+        self._trusted_visa_jwks_caches: dict[str, _JwksCache] = {}
 
         # Request sending and retry behavior (unit: seconds)
         self._request_timeout = 5
@@ -84,6 +102,8 @@ class OidcVerifier:
             raise RuntimeError("OIDC configuration did not expose 'jwks_uri'")
 
         self._oidc_jwks = self._get_jwks(jwks_uri)
+        self._oidc_jwks_cache = _JwksCache(
+            jwks_uri, self._oidc_jwks, time.monotonic())
 
         for trusted_issuer in self._trusted_visa_issuers:
             trusted_well_known_url = (
@@ -110,6 +130,8 @@ class OidcVerifier:
                     f"Duplicate trusted visa issuer "
                     f"[{trusted_issuer.issuer}]")
             self._trusted_visa_keys[trusted_issuer.issuer] = keys
+            self._trusted_visa_jwks_caches[trusted_issuer.issuer] = (
+                _JwksCache(trusted_issuer.jwks_uri, keys, time.monotonic()))
 
     # ------------------------------------------------------
     # Verify a JWT from the Authorization header
@@ -128,15 +150,18 @@ class OidcVerifier:
             )
             return cached_validation_result
 
-        if not self._oidc_jwks:
+        if self._oidc_jwks_cache is None:
             raise RuntimeError("Verifier not initialized: call init() first.")
 
+        self._get_current_jwks(self._oidc_jwks_cache)
         claims = self._validate_token(
             token,
-            self._oidc_jwks,
+            self._oidc_jwks_cache.keys,
             options={
                 "verify_exp": True, "verify_iat": True, "verify_aud": False,
             },
+            refresh_keys=lambda: self._get_current_jwks(
+                self._oidc_jwks_cache, on_kid_miss=True),
         )
         if claims is None:
             _log.debug("JWT decoding failed against configured OIDC JWKS")
@@ -258,34 +283,23 @@ class OidcVerifier:
                 "%s but the visa has no valid 'iss' claim", msg_has_visa)
             return False
 
-        visa_keys = self._trusted_visa_keys.get(issuer)
-        if not visa_keys:
+        visa_cache = self._trusted_visa_jwks_caches.get(issuer)
+        if visa_cache is None:
             _log.warning(
                 "%s but issuer [%s] is not trusted", msg_has_visa, issuer)
             return False
 
-        key_id = visa_header.get("kid")
-        algorithm = visa_header.get("alg")
-        candidate_keys = [
-            key for key in visa_keys
-            if key.algorithm_name == algorithm
-            and (key_id is None or key.key_id == key_id)
-        ]
-        if not candidate_keys:
-            _log.warning(
-                "%s but no trusted key matches the visa JWT header",
-                msg_has_visa,
-            )
-            return False
-
+        self._get_current_jwks(visa_cache)
         verified_claims = self._validate_token(
             visa_jwt,
-            candidate_keys,
+            visa_cache.keys,
             options={
                 "verify_signature": True,
                 "verify_iat": False,
                 "verify_exp": False,
             },
+            refresh_keys=lambda: self._get_current_jwks(
+                visa_cache, on_kid_miss=True),
         )
         if verified_claims is not None:
             _log.info("%s.", msg_has_visa)
@@ -312,8 +326,32 @@ class OidcVerifier:
     @staticmethod
     def _validate_token(
             token: str, keys: list[PyJWK], options: dict,
+            refresh_keys: Callable[[], list[PyJWK]] | None = None,
     ) -> dict | None:
-        for key in keys:
+        try:
+            header = jwt.get_unverified_header(token)
+        except PyJWTError:
+            return None
+
+        key_id = header.get("kid")
+        algorithm = header.get("alg")
+
+        def candidate_keys(current_keys: list[PyJWK]) -> list[PyJWK]:
+            return [
+                key for key in current_keys
+                if key.algorithm_name == algorithm
+                and (key_id is None or key.key_id == key_id)
+            ]
+
+        matching_keys = candidate_keys(keys)
+        if (
+                not matching_keys
+                and key_id is not None
+                and refresh_keys is not None
+        ):
+            matching_keys = candidate_keys(refresh_keys())
+
+        for key in matching_keys:
             try:
                 return jwt.decode(
                     token,
@@ -324,6 +362,43 @@ class OidcVerifier:
             except PyJWTError:
                 continue
         return None
+
+    def _get_current_jwks(
+            self, cache: _JwksCache, on_kid_miss: bool = False,
+    ) -> list[PyJWK]:
+        now = time.monotonic()
+        with cache.lock:
+            if on_kid_miss:
+                if (
+                        cache.last_kid_refresh is not None
+                        and now - cache.last_kid_refresh
+                        < _JWKS_KID_REFRESH_INTERVAL
+                ):
+                    return cache.keys
+                cache.last_kid_refresh = now
+            elif now - cache.refreshed_at < _JWKS_REFRESH_INTERVAL:
+                return cache.keys
+
+            if (
+                    cache.last_refresh_attempt is not None
+                    and now - cache.last_refresh_attempt
+                    < _JWKS_RETRY_INTERVAL
+            ):
+                return cache.keys
+            cache.last_refresh_attempt = now
+
+            try:
+                fresh_keys = self._get_jwks(cache.uri)
+            except (RuntimeError, PyJWTError, ValueError, TypeError) as error:
+                _log.warning(
+                    "Unable to refresh JWKS from [%s]; keeping cached keys: %s",
+                    cache.uri, error,
+                )
+                return cache.keys
+
+            cache.keys[:] = fresh_keys
+            cache.refreshed_at = time.monotonic()
+            return cache.keys
 
     def _retry_json_fetch(self, url: str, tries: int = 5):
         _log.info("Fetching JSON from [%s]", url)
