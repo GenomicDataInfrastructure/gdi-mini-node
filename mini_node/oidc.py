@@ -96,8 +96,9 @@ class OidcVerifier:
 
         self._userinfo_endpoint = oidc_conf.get("userinfo_endpoint")
         jwks_uri = oidc_conf.get("jwks_uri")
-        if not jwks_uri:
-            raise RuntimeError("OIDC configuration did not expose 'jwks_uri'")
+        if not isinstance(jwks_uri, str) or not jwks_uri.startswith("https://"):
+            raise RuntimeError(
+                "OIDC configuration did not expose a valid HTTPS 'jwks_uri'")
 
         self._oidc_jwks = self._get_jwks(jwks_uri)
         self._oidc_jwks_cache = _JwksCache(
