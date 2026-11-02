@@ -46,9 +46,7 @@ Endpoints
 ---------
 
 """
-    paths = []
-    for route in app_instance.routes:
-        paths.append((list(route.methods - {"HEAD"})[0], route.path))
+    paths = _get_endpoint_paths(app_instance)
 
     for path in sorted(paths, key=lambda x: x[1]):
         content += f"* {path[0]:4} {base_url}{path[1]}\n"
@@ -97,6 +95,28 @@ def get_health(_: Request) -> JSONResponse:
     return JSONResponse({
         "timestamp": ts, "version": app_version, "healthy": True,
     })
+
+
+def _get_endpoint_paths(app: FastAPI) -> set[tuple[str, str]]:
+    paths = {
+        (method, route.path)
+        for route in app.routes
+        if (methods := getattr(route, "methods", None))
+        and (path := getattr(route, "path", None))
+        for method in methods - {"HEAD"}
+    }
+
+    for path, operations in app.openapi()["paths"].items():
+        paths.update(
+            (method.upper(), path)
+            for method in operations
+            if method.upper() in {
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE"
+            }
+            and method.upper() != "HEAD"
+        )
+
+    return paths
 
 
 def _check_access(request: Request) -> PlainTextResponse | None:

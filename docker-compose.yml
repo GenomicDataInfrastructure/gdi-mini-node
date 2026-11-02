@@ -4,7 +4,7 @@ services:
     image: mininode:latest
     build: .
     ports:
-      - "127.0.0.1:8080:8000"
+      - "8080:8000"
     volumes:
       - ./config:/app/config:ro
       # Don't use this volume when S3 data-sync is enabled:
