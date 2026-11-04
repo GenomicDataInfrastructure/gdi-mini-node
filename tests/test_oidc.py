@@ -1,6 +1,7 @@
 import json
 import time
 import unittest
+from unittest.mock import patch
 
 import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -15,6 +16,7 @@ OIDC_ISSUER = "https://test.example.org/"
 OIDC_JWKS_URI = "https://test.example.org/jwks"
 VISA_ISSUER = "https://visa.example.org/"
 VISA_JWKS_URI = "https://visa.example.org/jwks"
+USERINFO_ENDPOINT = "https://test.example.org/userinfo"
 REQUIRED_VISA = {
     "type": "ResearcherStatus",
     "value": "https://doi.org/10.1038/s41431-018-0219-y",
@@ -91,6 +93,7 @@ class OidcVerifierTest(unittest.TestCase):
     def _create_auth_token(
             self, subject: str, visas: list[str],
             issuer: str = OIDC_ISSUER,
+            scope: str | None = None,
     ) -> str:
         now = int(time.time())
         claims = {
@@ -100,6 +103,8 @@ class OidcVerifierTest(unittest.TestCase):
             "exp": now + 300,
             "ga4gh_passport_v1": visas,
         }
+        if scope is not None:
+            claims["scope"] = scope
         return self._encode_token(claims, self.oidc_private_key, "oidc-key")
 
     def test_verify_accepts_token_with_required_trusted_visa(self):
@@ -108,6 +113,53 @@ class OidcVerifierTest(unittest.TestCase):
         auth_token = self._create_auth_token(subject, [visa_token])
 
         self.assertTrue(self.verifier.verify(auth_token))
+
+    def test_verify_uses_userinfo_passport_when_scope_requests_it(self):
+        subject = "test-subject"
+        visa_token = self._create_visa_token(subject)
+        auth_token = self._create_auth_token(
+            subject,
+            [],
+            scope="openid profile ga4gh_passport_v1",
+        )
+        self.verifier._userinfo_endpoint = USERINFO_ENDPOINT
+
+        with patch.object(
+                self.verifier,
+                "_retry_json_fetch",
+                return_value={"ga4gh_passport_v1": [visa_token]},
+        ) as fetch_userinfo:
+            self.assertTrue(self.verifier.verify(auth_token))
+
+        fetch_userinfo.assert_called_once_with(
+            USERINFO_ENDPOINT,
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+    def test_init_warns_and_disables_non_https_userinfo_endpoint(self):
+        verifier = OidcVerifier(
+            issuer=OIDC_ISSUER,
+            client_id="test-client",
+            client_secret="test-secret",
+            required_visas=[REQUIRED_VISA],
+            trusted_visa_issuers=[],
+        )
+        with (
+                patch.object(
+                    verifier,
+                    "_retry_json_fetch",
+                    return_value={
+                        "userinfo_endpoint": "http://test.example.org/userinfo",
+                        "jwks_uri": OIDC_JWKS_URI,
+                    },
+                ),
+                patch.object(verifier, "_get_jwks", return_value=[]),
+                self.assertLogs("mini_node.oidc", level="WARNING") as logs,
+        ):
+            verifier.init()
+
+        self.assertIsNone(verifier._userinfo_endpoint)
+        self.assertIn("valid HTTPS 'userinfo_endpoint'", logs.output[0])
 
     def test_verify_rejects_token_without_required_visa_attributes(self):
         subject = "test-subject"

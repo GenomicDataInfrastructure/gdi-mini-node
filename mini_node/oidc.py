@@ -94,7 +94,18 @@ class OidcVerifier:
             raise RuntimeError(
                 f"Unable to fetch OIDC configuration from {well_known_url}")
 
-        self._userinfo_endpoint = oidc_conf.get("userinfo_endpoint")
+        userinfo_endpoint = oidc_conf.get("userinfo_endpoint")
+        if (
+                not isinstance(userinfo_endpoint, str)
+                or not userinfo_endpoint.startswith("https://")
+        ):
+            _log.warning(
+                "OIDC configuration did not expose a valid HTTPS "
+                "'userinfo_endpoint'; UserInfo passport retrieval is disabled")
+            self._userinfo_endpoint = None
+        else:
+            self._userinfo_endpoint = userinfo_endpoint
+
         jwks_uri = oidc_conf.get("jwks_uri")
         if not isinstance(jwks_uri, str) or not jwks_uri.startswith("https://"):
             raise RuntimeError(
@@ -178,7 +189,7 @@ class OidcVerifier:
             self._lru.put(token, False)
             return False
 
-        passport = claims.get("ga4gh_passport_v1")
+        passport = self._provide_passport_data(claims, token)
         valid = self._check_passport(sub, passport)
 
         _log.info(
@@ -187,6 +198,31 @@ class OidcVerifier:
 
         self._lru.put(token, valid)
         return valid
+
+    def _provide_passport_data(
+            self, claims: dict, token: str,
+    ) -> list[str] | None:
+        scopes = claims.get("scope")
+        if not isinstance(scopes, str) or not {
+                "openid", "ga4gh_passport_v1",
+        }.issubset(scopes.split()):
+            return claims.get("ga4gh_passport_v1")
+
+        if self._userinfo_endpoint is None:
+            _log.warning(
+                "Cannot retrieve GA4GH passport: UserInfo endpoint is "
+                "unavailable")
+            return None
+
+        userinfo = self._retry_json_fetch(
+            self._userinfo_endpoint,
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        if not isinstance(userinfo, dict):
+            _log.warning("Unable to retrieve OIDC UserInfo response")
+            return None
+
+        return userinfo.get("ga4gh_passport_v1")
 
     # ------------------------------------------------------
     # GA4GH Passport checking
@@ -405,7 +441,10 @@ class OidcVerifier:
             cache.refreshed_at = time.monotonic()
             return cache.keys
 
-    def _retry_json_fetch(self, url: str, tries: int = 5):
+    def _retry_json_fetch(
+            self, url: str, tries: int = 5,
+            headers: dict[str, str] | None = None,
+    ):
         _log.info("Fetching JSON from [%s]", url)
         for attempt in range(1, tries + 1):
             try:
@@ -413,7 +452,7 @@ class OidcVerifier:
                         timeout=self._request_timeout,
                         follow_redirects=False,
                 ) as client:
-                    resp = client.get(url)
+                    resp = client.get(url, headers=headers)
                 if resp.status_code == 200:
                     return resp.json()
                 else:
