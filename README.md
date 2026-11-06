@@ -3,8 +3,7 @@
 ![GitHub License](https://img.shields.io/github/license/GenomicDataInfrastructure/gdi-mini-node)
 
 
-GDI MINI-NODE
-=============
+# GDI MINI-NODE
 
 This is a minimal single-app solution to run **GDI node** services.
 
@@ -47,8 +46,7 @@ contributions. This code belongs to public domain for the sake of the European
 Genomic  Data Infrastructure project.
 
 
-FAIR Data Point
----------------
+## FAIR Data Point
 
 Implementation under the `mini_node.fdp` module follows standards:
 
@@ -94,8 +92,7 @@ system.
 _fdp.yaml_ configuration file.
 
 
-The Beacon APIs
----------------
+## The Beacon APIs
 
 The solution adapts the Beacon v2 specification only partially, just enough to
 comply with the expectations from the GDI User Portal. First of all, the Beacon
@@ -189,8 +186,12 @@ configuration files:
   covered by the GDI User Portal).
 
 
-General Configuration
----------------------
+When OIDC is enabled, configure a non-empty `trusted_visa_issuers` list in
+the Beacon configuration. Each entry contains an `issuer` and its `jwks_uri`;
+incoming GA4GH visa signatures are checked only against those configured
+issuers.
+
+## General Configuration
 
 There is also another configuration file: [app.yaml](config/app.yaml). It is
 always required, and is used for configuring general app features:
@@ -209,8 +210,7 @@ Kubernetes, is left to the deployers to decide. A persistent volume may reduce
 network traffic between the app and its S3 storage, especially on restarts.
 
 
-Getting Started
----------------
+## Getting Started
 
 There are many ways to run the software. In either way, your entrypoint to the
 application is at http://localhost:8080 in the following examples.
@@ -245,8 +245,7 @@ Notes about the Docker image:
 * it requires 150 MB of RAM at minimum; ensure at least 500 MB.
 
 
-Data Preparation
-----------------
+## Data Preparation
 
 Datasets are laid out under the data-directory as subdirectories where the
 directory name is the ID of the dataset. Each such directory is expected to

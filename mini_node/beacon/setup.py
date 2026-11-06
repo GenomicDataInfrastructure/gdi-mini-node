@@ -268,6 +268,7 @@ class BeaconSetup:
                 oidc_config.client_id,
                 oidc_config.client_secret,
                 oidc_config.required_visas,
+                oidc_config.trusted_visa_issuers,
             )
             self._oidc_verifier.init()
             _log.info(f"[{self._base_path}] OIDC authentication is enforced.")

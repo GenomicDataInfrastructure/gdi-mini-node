@@ -51,8 +51,6 @@ log = getLogger(__name__)
 log.info("Logging is now configured. Welcome!")
 log.debug("DEBUG-level logging is enabled.")
 
-# node_minio_client = MinioClient(**config.services.minio.model_dump())
-
 app_data_dir = app_config.data_dir
 s3_sync_config = app_config.sync_from_s3
 

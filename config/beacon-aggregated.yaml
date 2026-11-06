@@ -26,6 +26,11 @@ configuration:
     issuer: https://login.aai.lifescience-ri.eu/oidc/
     client_id:
     client_secret:
+    # Configure at least one trusted issuer when enabling OIDC:
+    # trusted_visa_issuers:
+    #   - issuer: https://visa.example.org
+    #     jwks_uri: https://visa.example.org/jwks
+    trusted_visa_issuers: []
     required_visas:
       # Visa properties for "bona fide researcher":
       - type: ResearcherStatus
